@@ -143,7 +143,11 @@ export function ConnectedApps() {
         <strong>Connections</strong>
         <div className="unified-connection-list">
           {apps.map((name) => {
-            const status = integrations.find((item) => item.id === name)?.status || "unknown";
+            const status = panels[name].error
+              ? "needs_attention"
+              : panels[name].loading
+                ? "checking"
+                : integrations.find((item) => item.id === name)?.status || "unknown";
             const live = status === "read_access_verified" || status === "verified" || status === "connected";
             return <span className="unified-connection" key={name} title={`${appNames[name]}: ${status.replaceAll("_", " ")}`}>
               <i className={live ? "live" : "attention"} />{appNames[name]}

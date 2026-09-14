@@ -1,5 +1,6 @@
 from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
+from playwright.async_api import TimeoutError as BrowserTimeoutError
 
 from lifeos.config import Settings
 from lifeos.main import create_app
@@ -48,3 +49,23 @@ def test_live_gmail_and_discord_screens_are_bounded_and_read_only(tmp_path):
         assert channel.json()["items"][0]["avatar_url"] == "https://cdn.discordapp.com/avatars/123456/a_avatarhash.png?size=64"
         assert all(method == "GET" for _, method, _ in calls)
         assert all("12345" in url for owner, method, url in calls if owner == "bot")
+
+
+def test_whatsapp_browser_navigation_timeout_is_a_bounded_screen_error(tmp_path):
+    app = create_app(Settings(
+        _env_file=None, mode="live", environment="test",
+        database_url=f"sqlite:///{tmp_path}/whatsapp-screen.db",
+        auth_password="test-workspace-password",
+        encryption_key=Fernet.generate_key().decode(),
+        whatsapp_enabled=True, whatsapp_contact="Allowed test chat",
+    ))
+
+    async def timed_out():
+        raise BrowserTimeoutError("Page.goto timed out")
+
+    app.state.engine.providers.read_whatsapp_messages = timed_out
+    with TestClient(app, raise_server_exceptions=False) as browser:
+        assert browser.post("/api/auth/login", json={"password": "test-workspace-password"}).status_code == 200
+        response = browser.get("/api/apps/whatsapp")
+        assert response.status_code == 502
+        assert "unavailable" in response.json()["detail"].lower()

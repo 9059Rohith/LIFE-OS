@@ -78,7 +78,10 @@ class WhatsAppWorker:
             )
             self._context.set_default_timeout(10000)
             self._page = self._context.pages[0] if self._context.pages else await self._context.new_page()
-            await self._page.goto("https://web.whatsapp.com/", wait_until="domcontentloaded", timeout=60000)
+            # WhatsApp Web can keep its document load pending while the signed-in
+            # application is usable. The visible search box below is the actual
+            # readiness check, so navigation only needs to commit.
+            await self._page.goto("https://web.whatsapp.com/", wait_until="commit", timeout=60000)
         page = self._page
         if await self._selected_chat_matches(page, contact):
             return page

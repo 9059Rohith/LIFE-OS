@@ -182,6 +182,8 @@ def register_app_screens(app, settings, security, providers):
             raise HTTPException(502, f"WhatsApp chat unavailable ({exc.code}). Check Integrations.") from None
         except TimeoutError:
             raise HTTPException(504, "WhatsApp chat did not respond in time.") from None
+        except Exception:
+            raise HTTPException(502, "WhatsApp browser unavailable. Check Integrations and retry.") from None
 
     @app.get("/api/apps/maps")
     async def maps(request: Request):
