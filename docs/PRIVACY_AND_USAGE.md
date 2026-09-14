@@ -1,0 +1,9 @@
+# Data controls and measured usage
+
+Settings includes a credential-free workspace export, local Google disconnection and explicitly confirmed local-data deletion. Deletion requires the exact phrase `DELETE MY DATA`, the authenticated session and CSRF token. It stops source polling, refuses active or uncertain execution/compensation, deletes only the current owner's database records and invalidates that owner's sessions. It does not erase external messages, modify provider permissions, remove environment secrets or unlink the dedicated WhatsApp browser profile. Manage those separately in the provider account and host secret store.
+
+Event retention removes expired event history during new planning. Active/uncertain execution and undo evidence remains available until reconciled. Expired sessions are cleaned when a session is created. Audit history and ingestion deduplication records are retained separately until explicit workspace deletion so pruning cannot break audit chains or replay old messages.
+
+OpenAI requests record owner-scoped aggregate call counts, failures, elapsed request milliseconds, audio byte counts and token/audio-duration fields actually returned by the provider. Prompts, transcripts, audio, credentials and raw provider responses are not stored in telemetry. Requests that omit usage do not invent token counts. The metrics endpoint exposes these aggregates under `model_token_usage`; they survive an application restart. Counters describe calls observed after this feature was installed, not historical billing. No currency-cost estimate or inferred audio duration is presented.
+
+The API limits voice to two active calls and twelve attempts per owner per minute. Direct extraction responses are capped at 600 output tokens; monitored source planning is bounded to three records per scan. Live delivery and real microphone/speaker checks still need the operator's account and device acceptance.

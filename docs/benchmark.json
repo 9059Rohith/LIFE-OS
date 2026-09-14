@@ -1,0 +1,44 @@
+{
+  "mode": "local demo, persistent local records only",
+  "url": "http://127.0.0.1:8010",
+  "measured_at_utc": "2026-09-13T12:14:12Z",
+  "runs": [
+    {
+      "plan_ms": 398.8995999970939,
+      "approve_ms": 347.58729999884963,
+      "execute_verify_ms": 500.1254999951925,
+      "total_ms": 1246.612399991136
+    },
+    {
+      "plan_ms": 221.424899995327,
+      "approve_ms": 390.0543999916408,
+      "execute_verify_ms": 522.8525999991689,
+      "total_ms": 1134.3318999861367
+    },
+    {
+      "plan_ms": 328.43639998463914,
+      "approve_ms": 49.18670002371073,
+      "execute_verify_ms": 484.64229999808595,
+      "total_ms": 862.2654000064358
+    },
+    {
+      "plan_ms": 266.7094999924302,
+      "approve_ms": 40.26720000547357,
+      "execute_verify_ms": 802.639800007455,
+      "total_ms": 1109.6165000053588
+    },
+    {
+      "plan_ms": 217.7568000042811,
+      "approve_ms": 33.408000017516315,
+      "execute_verify_ms": 380.9488999831956,
+      "total_ms": 632.113700004993
+    }
+  ],
+  "median_ms": {
+    "plan_ms": 266.7094999924302,
+    "approve_ms": 49.18670002371073,
+    "execute_verify_ms": 500.1254999951925,
+    "total_ms": 1109.6165000053588
+  },
+  "limitations": "Sequential warm local HTTP measurements; excludes human approval time, external providers and voice."
+}
