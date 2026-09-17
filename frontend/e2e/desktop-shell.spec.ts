@@ -43,3 +43,21 @@ test("desktop dock separates an uncertain send from a verified receipt", async (
   expect(calls.viewport?.width).toBeGreaterThan(300);
   expect(calls.viewport?.height).toBeGreaterThan(180);
 });
+
+test("desktop dock discovers a newly signed-in workspace", async ({ page }) => {
+  let signedIn = false;
+  await page.addInitScript(() => {
+    Object.assign(window, { lifeosDesktop: {
+      select: () => {}, setViewport: () => {}, reloadWorkspace: () => {}, reload: () => {},
+      onStatus: () => () => {},
+    } });
+  });
+  await page.route("**/api/session", (route) => signedIn
+    ? route.fulfill({ json: { user: { id: "owner", name: "Workspace" }, csrf_token: "test", mode: "live", voice_available: false } })
+    : route.fulfill({ status: 401, json: { detail: "Sign in required" } }));
+  await page.route("**/api/events", (route) => route.fulfill({ json: [] }));
+  await page.goto("/desktop.html");
+  await expect(page.getByRole("heading", { name: "Connect your workspace" })).toBeVisible();
+  signedIn = true;
+  await expect(page.getByLabel("What changed?")).toBeVisible({ timeout: 10000 });
+});

@@ -301,7 +301,7 @@ export default function App() {
             </p>
           )}
           <p className="field-note">
-            If the server is unavailable, start the backend and refresh this
+            Having trouble connecting? Check your connection and refresh this
             page.
           </p>
         </form>

@@ -156,12 +156,11 @@ function DesktopApp() {
   }, [bridge]);
 
   useEffect(() => {
-    if (!session || session.mode !== "live") return;
     const timer = window.setInterval(() => {
       if (!document.hidden) void load();
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [load, session]);
+  }, [load]);
 
   async function createEvent() {
     const text = input.trim();
