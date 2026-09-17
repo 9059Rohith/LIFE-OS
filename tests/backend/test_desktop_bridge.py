@@ -1,4 +1,5 @@
 import asyncio
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -65,6 +66,21 @@ def test_desktop_bridge_routes_require_owner_session_csrf_and_pending_job(tmp_pa
         reply = client.post("/api/desktop/bridge/result", json=payload,
                             headers={"X-CSRF-Token": login.json()["csrf_token"]})
         assert reply.status_code == 409
+
+
+def test_whatsapp_integration_reports_current_desktop_availability(tmp_path):
+    app = create_app(Settings(
+        mode="live", database_url=f"sqlite:///{tmp_path}/status.db",
+        auth_password="strong-test-password-123", encryption_key=Fernet.generate_key().decode(),
+        whatsapp_bridge_enabled=True, whatsapp_contact="Allowed chat",
+    ))
+    with TestClient(app) as client:
+        client.post("/api/auth/login", json={"password": "strong-test-password-123"})
+        offline = {row["id"]: row for row in client.get("/api/integrations").json()}
+        assert offline["whatsapp"]["status"] == "needs_attention"
+        app.state.desktop_bridge._last_poll = time.monotonic()
+        online = {row["id"]: row for row in client.get("/api/integrations").json()}
+        assert online["whatsapp"]["status"] == "configured_unverified"
 
 
 @pytest.mark.asyncio

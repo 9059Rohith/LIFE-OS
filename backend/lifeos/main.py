@@ -461,7 +461,7 @@ def create_app(settings=None):
             "calendar": google,
             "drive": google,
             "discord": bool(settings.discord_bot_token and settings.discord_channel_id),
-            "whatsapp": settings.whatsapp_enabled,
+            "whatsapp": settings.whatsapp_enabled or bool(desktop_bridge),
         }
         return [
             {
@@ -469,6 +469,8 @@ def create_app(settings=None):
                 "name": name,
                 "status": "local_demo"
                 if settings.mode == "demo"
+                else "needs_attention"
+                if key == "whatsapp" and desktop_bridge and not desktop_bridge.connected
                 else checked[key]["status"]
                 if configured[key] and key in checked
                 else "configured_unverified"
@@ -477,6 +479,8 @@ def create_app(settings=None):
                 "mode": settings.mode,
                 "description": "Persistent local application records; no third-party account accessed."
                 if settings.mode == "demo"
+                else "Open the signed-in LIFEOS desktop app to connect WhatsApp actions."
+                if key == "whatsapp" and desktop_bridge and not desktop_bridge.connected
                 else "Last checked "
                 + datetime.fromtimestamp(snapshot["checked_at"], UTC).strftime("%Y-%m-%d %H:%M UTC")
                 + ". "
