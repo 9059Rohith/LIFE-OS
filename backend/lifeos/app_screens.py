@@ -174,7 +174,7 @@ def register_app_screens(app, settings, security, providers):
     @app.get("/api/apps/whatsapp")
     async def whatsapp(request: Request):
         owner_for(request)
-        if not settings.whatsapp_enabled or not settings.whatsapp_contact:
+        if not (settings.whatsapp_enabled or getattr(settings, "whatsapp_bridge_enabled", False)) or not settings.whatsapp_contact:
             raise HTTPException(409, "WhatsApp chat is not configured")
         try:
             return await asyncio.wait_for(providers.read_whatsapp_messages(), timeout=90)

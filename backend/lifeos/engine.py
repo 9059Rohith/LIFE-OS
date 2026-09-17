@@ -116,7 +116,7 @@ class Engine:
             try:
                 context = await asyncio.wait_for(
                     self.providers.context(owner, text, entities=entities, timezone=preferences["timezone"]),
-                    30,
+                    55,
                 )
             except Exception:
                 raise HTTPException(
@@ -235,7 +235,7 @@ class Engine:
             return event
         if self.settings.mode == "live":
             try:
-                await asyncio.wait_for(self.providers.preflight(owner, selected), 20)
+                await asyncio.wait_for(self.providers.preflight(owner, selected), 50)
             except Exception as exc:
                 if getattr(exc, "code", "") == "STALE_APPROVAL_ERROR":
                     raise HTTPException(

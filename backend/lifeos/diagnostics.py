@@ -23,8 +23,8 @@ async def connection_checks(settings, providers, owner):
 
     async def check(key):
         if key == "whatsapp":
-            if not settings.whatsapp_enabled:
-                return result(key, "not_connected", "Link the dedicated browser with WhatsApp's QR flow, then enable the worker.")
+            if not (settings.whatsapp_enabled or getattr(settings, "whatsapp_bridge_enabled", False)):
+                return result(key, "not_connected", "Open the signed-in WhatsApp view in the LIFEOS desktop app to connect it to approved actions.")
             try:
                 await asyncio.wait_for(providers.check_whatsapp(), timeout=90)
                 return result(key, "read_access_verified", "Signed-in browser, exact chat and composer verified. A message is sent only through an approved action.")

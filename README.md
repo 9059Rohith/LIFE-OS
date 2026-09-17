@@ -92,14 +92,14 @@ $env:LIFEOS_STATIC_DIR = (Resolve-Path frontend/dist).Path
 
 ## Open the actual Discord and WhatsApp sites in LIFEOS
 
-On Windows, keep the local live backend running at `http://127.0.0.1:8010` with the compiled frontend, then launch the desktop window:
+On Windows, launch the desktop window and sign in to the hosted live workspace:
 
 ```powershell
 npm --prefix desktop ci
 npm --prefix desktop start
 ```
 
-The center of this window is the real LIFEOS, Discord, or WhatsApp Web page in an isolated persistent Electron session. Sign in to each site inside its own view; LIFEOS never copies provider website credentials into the backend. The right dock reads real LIFEOS events and lets the owner review and approve actions. A page-load badge only reports that the site rendered; it does not claim that its account is connected. The unsigned Windows companion installer built with `npm --prefix desktop run dist:win` opens the trusted hosted LIFEOS workspace by default; set `LIFEOS_DESKTOP_URL=http://127.0.0.1:8010/desktop.html` to use a local backend. The backend's approved WhatsApp worker currently uses a separate browser profile, so the visible WhatsApp session is not yet the sender for approved actions.
+The center of this window is the real LIFEOS, Discord, or WhatsApp Web page in an isolated persistent Electron session. Sign in to each site inside its own view; LIFEOS never copies provider website credentials into the backend. The right dock reads real LIFEOS events and lets the owner review and approve actions. A page-load badge only reports that the site rendered; it does not claim that its account is connected. The unsigned Windows companion installer built with `npm --prefix desktop run dist:win` opens the trusted hosted LIFEOS workspace by default; set `LIFEOS_DESKTOP_URL=http://127.0.0.1:8010/desktop.html` to use a local backend. When the desktop bridge is enabled, approved WhatsApp jobs use this same visible, signed-in view and return read-back to the backend; the separate Playwright profile remains an optional local alternative.
 
 ## Isolated legacy demo
 
@@ -124,14 +124,14 @@ For a voice demo, configure `LIFEOS_OPENAI_API_KEY`, restart, allow microphone a
 | Google Calendar | Google OAuth; event updates and read-back | Persistent event records |
 | Google Drive | Google OAuth; document/file access | Persistent document records |
 | Discord | Bot token and explicit channel | Persistent channel records |
-| WhatsApp | Opt-in Playwright browser session, explicit contact | Persistent message records |
+| WhatsApp | Signed-in desktop view bridge or opt-in Playwright worker; explicit contact | Persistent message records |
 | OpenAI | Structured event extraction, transcription, speech | Deterministic local event handling without keys |
 
 All backend settings use the `LIFEOS_` prefix. [.env.example](.env.example) lists the supported configuration. Secrets belong only on the server; never use a `VITE_` variable for a credential. `LIFEOS_MODE=demo` selects local providers; `live` selects configured provider operations. `LIFEOS_ENVIRONMENT=production` enables stricter startup requirements. Use a long unique owner password and a Fernet encryption key for live credentials. Flight plans do not calculate travel time or propose pickup times; check those manually. Optionally select a proposal with `LIFEOS_DRIVE_PROPOSAL_FILE_ID`; supported proposal content is Google Docs or text.
 
 For Google OAuth, create a Web OAuth client in your Google Cloud project, configure the consent screen and test users, enable the Gmail, Calendar and Drive APIs, then register the exact callback from `LIFEOS_GOOGLE_REDIRECT_URI`. Set the client ID/secret and use **Connect Google** in Integrations. Local default: `http://localhost:8010/api/integrations/google/callback`. Use the same hostname throughout the browser session. Deployment callbacks must use your HTTPS hostname. Requested scopes are Gmail readonly/compose, Calendar events and Drive readonly; Drive live integration supplies context rather than document mutation. Provider scope verification and consent restrictions must be validated in your own Google project.
 
-WhatsApp requires a separate interactive login and browser installation. Keep its persistent profile private. The default application container deliberately does not install Chromium or expose a browser profile. Read [integration setup and supported operations](docs/INTEGRATIONS.md) and [deployment instructions](docs/DEPLOYMENT.md) before enabling it. Its selectors and account behavior require a live acceptance test.
+WhatsApp requires interactive sign-in inside the desktop view for the bridge, or in a dedicated browser profile for the optional local worker. Keep either session private. The application container does not install Chromium or expose a browser profile. Read [integration setup and supported operations](docs/INTEGRATIONS.md) and [deployment instructions](docs/DEPLOYMENT.md) before enabling it. Read access through the signed-in desktop view has passed locally; live sending still requires an approved action and delivery acceptance.
 
 ## Safety, approvals and evidence
 

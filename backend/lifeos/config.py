@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     discord_channel_id: str = ""
     drive_proposal_file_id: str = ""
     whatsapp_enabled: bool = False
+    whatsapp_bridge_enabled: bool = False
     whatsapp_headless: bool = True
     whatsapp_profile_dir: str = ".private/whatsapp"
     whatsapp_contact: str = ""
@@ -38,6 +39,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def guard(self) -> Self:
+        if self.whatsapp_bridge_enabled and (self.mode != "live" or not self.whatsapp_contact):
+            raise ValueError("Desktop WhatsApp bridge requires live mode and an allowlisted contact")
         if self.public_demo and not (self.mode == "demo" and self.environment == "production"):
             raise ValueError("Public demo requires demo mode in production")
         if self.environment == "production" and (

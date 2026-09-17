@@ -1,6 +1,7 @@
 const path = require("node:path");
 const { app, BaseWindow, WebContentsView, ipcMain, session, shell: systemShell } = require("electron");
 const { hostedWorkspaceOrigin, workspaceAddress, isAllowedNavigation, isExternalGoogleAuthorization } = require("./navigation.cjs");
+const { startDesktopBridge } = require("./desktop-bridge.cjs");
 
 app.enableSandbox();
 
@@ -18,9 +19,11 @@ let offline = false;
 let shellLoading = false;
 let closing = false;
 let connectionTimer;
+let stopBridge;
 let stage = { x: 180, y: 112, width: 760, height: 650 };
 const views = new Map();
 const viewStates = new Map();
+const viewLoads = new Map();
 
 function sendStatus(name, state, detail = "") {
   viewStates.set(name, { state, detail });
@@ -77,22 +80,31 @@ function createView(name) {
   return view;
 }
 
+function ensureView(name) {
+  let view = views.get(name);
+  if (!view) {
+    view = createView(name);
+    const url = name === "lifeos" ? workspaceUrl.href : providers[name].url;
+    sendStatus(name, "loading");
+    viewLoads.set(name, view.webContents.loadURL(url).catch((error) => {
+      sendStatus(name, "error", error.message);
+      return null;
+    }));
+  }
+  return view;
+}
+
 function setActive(name) {
   if (!window || !["none", "lifeos", "discord", "whatsapp"].includes(name)) return;
+  if (active === name && (name === "none" || views.has(name))) return;
   if (active !== "none") {
     const previous = views.get(active);
     if (previous) window.contentView.removeChildView(previous);
   }
   active = name;
   if (name === "none") return;
-  let view = views.get(name);
-  const newlyCreated = !view;
-  if (!view) {
-    view = createView(name);
-    const url = name === "lifeos" ? workspaceUrl.href : providers[name].url;
-    sendStatus(name, "loading");
-    void view.webContents.loadURL(url).catch((error) => sendStatus(name, "error", error.message));
-  }
+  const newlyCreated = !views.has(name);
+  const view = ensureView(name);
   view.setBounds(stage);
   window.contentView.addChildView(view);
   if (!newlyCreated) {
@@ -166,15 +178,27 @@ app.whenReady().then(() => {
       });
   });
   window.on("closed", () => {
+    stopBridge?.();
     if (connectionTimer) clearInterval(connectionTimer);
     for (const view of views.values()) view.webContents.close();
     shell.webContents.close();
     views.clear();
     viewStates.clear();
+    viewLoads.clear();
     window = undefined;
     shell = undefined;
   });
   void loadShell();
+  stopBridge = startDesktopBridge(shellUrl.origin, session.fromPartition(shellPartition), async () => {
+    setActive("whatsapp");
+    shell.webContents.send("lifeos:focus-provider", "whatsapp");
+    const view = ensureView("whatsapp");
+    await viewLoads.get("whatsapp");
+    if (!view.webContents.getURL().startsWith(providers.whatsapp.origin + "/")) {
+      throw new Error("WhatsApp view is unavailable");
+    }
+    return view;
+  });
   connectionTimer = setInterval(async () => {
     if (!offline || shellLoading) return;
     try {

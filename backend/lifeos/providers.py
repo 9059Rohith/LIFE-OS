@@ -60,7 +60,7 @@ def decode_body(data):
 
 
 class LiveProviders:
-    def __init__(self, settings, token_loader, token_saver):
+    def __init__(self, settings, token_loader, token_saver, whatsapp_bridge=None):
         self.settings = settings
         self.token_loader = token_loader
         self.token_saver = token_saver
@@ -68,6 +68,7 @@ class LiveProviders:
         self._google_lock = asyncio.Lock()
         self._limit = asyncio.Semaphore(4)
         self._whatsapp = None
+        self.whatsapp_bridge = whatsapp_bridge
 
     async def close(self):
         await self.http.aclose()
@@ -77,10 +78,15 @@ class LiveProviders:
     async def check_whatsapp(self):
         from .whatsapp import WhatsAppWorker
 
-        if not getattr(self.settings, "whatsapp_enabled", False) or not getattr(
+        if not (getattr(self.settings, "whatsapp_enabled", False) or self.whatsapp_bridge) or not getattr(
             self.settings, "whatsapp_contact", ""
         ):
             raise ProviderError("WhatsApp chat is not configured", "AUTHORIZATION_ERROR")
+        if self.whatsapp_bridge:
+            result = await self.whatsapp_bridge.request("check", {"contact": self.settings.whatsapp_contact}, 45)
+            if result.get("verified") is not True:
+                raise ProviderError("Desktop WhatsApp chat could not be verified", "AUTHORIZATION_ERROR")
+            return True
         if not self._whatsapp:
             self._whatsapp = WhatsAppWorker(self.settings)
         return await self._whatsapp.check(self.settings.whatsapp_contact)
@@ -88,10 +94,15 @@ class LiveProviders:
     async def read_whatsapp_messages(self):
         from .whatsapp import WhatsAppWorker
 
-        if not getattr(self.settings, "whatsapp_enabled", False) or not getattr(
+        if not (getattr(self.settings, "whatsapp_enabled", False) or self.whatsapp_bridge) or not getattr(
             self.settings, "whatsapp_contact", ""
         ):
             raise ProviderError("WhatsApp chat is not configured", "AUTHORIZATION_ERROR")
+        if self.whatsapp_bridge:
+            result = await self.whatsapp_bridge.request("read", {"contact": self.settings.whatsapp_contact}, 24)
+            if result.get("application") != "whatsapp" or result.get("title") != self.settings.whatsapp_contact or not isinstance(result.get("items"), list):
+                raise ProviderError("Desktop WhatsApp read-back was invalid", "VERIFICATION_ERROR")
+            return result
         if not self._whatsapp:
             self._whatsapp = WhatsAppWorker(self.settings)
         return await self._whatsapp.read_recent(self.settings.whatsapp_contact)
@@ -384,10 +395,10 @@ class LiveProviders:
                 )
             )
             names.append("discord")
-        if getattr(self.settings, "whatsapp_enabled", False) and getattr(
+        if (getattr(self.settings, "whatsapp_enabled", False) or self.whatsapp_bridge) and getattr(
             self.settings, "whatsapp_contact", ""
         ):
-            tasks.append(asyncio.wait_for(self.check_whatsapp(), 18))
+            tasks.append(asyncio.wait_for(self.check_whatsapp(), 48))
             names.append("whatsapp")
         results = await asyncio.gather(*tasks, return_exceptions=True)
         context = []
@@ -544,6 +555,17 @@ class LiveProviders:
         if application == "drive" and kind == "read":
             return await self.drive_read(user_id, args.get("file_id"))
         if application == "whatsapp" and kind == "send":
+            if self.whatsapp_bridge:
+                if args.get("contact") != self.settings.whatsapp_contact or not args.get("body") or len(args["body"]) > 4000:
+                    raise ProviderError("WhatsApp target or message is invalid", "AUTHORIZATION_ERROR")
+                result = await self.whatsapp_bridge.request("send", {
+                    "contact": self.settings.whatsapp_contact,
+                    "body": args["body"], "idempotency_key": idempotency_key,
+                }, 27)
+                if (not result.get("id") or result.get("contact") != self.settings.whatsapp_contact
+                        or result.get("body") != args["body"] or result.get("idempotency_key") != idempotency_key):
+                    raise ProviderError("Desktop WhatsApp send result was invalid", "VERIFICATION_ERROR", True)
+                return result
             from .whatsapp import WhatsAppWorker
 
             if not self._whatsapp:
@@ -749,6 +771,17 @@ class LiveProviders:
                 args.get("channel_id")
             )
         elif application == "whatsapp":
+            if self.whatsapp_bridge:
+                answer = await self.whatsapp_bridge.request("verify", {
+                    "contact": self.settings.whatsapp_contact,
+                    "id": result["id"], "body": result["body"],
+                }, 12)
+                return {
+                    "verified": answer.get("verified") is True and answer.get("provider_id") == result["id"],
+                    "detail": "WhatsApp outgoing message and sent indicator read from the conversation"
+                    if answer.get("verified") is True else "WhatsApp send not confirmed; manual review required",
+                    "provider_id": result["id"],
+                }
             return await self._whatsapp.verify(result)
         elif application == "drive":
             current = await self.drive_read(user_id, args.get("file_id"))

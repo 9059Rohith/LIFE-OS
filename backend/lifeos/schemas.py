@@ -30,6 +30,14 @@ class LoginInput(Strict):
     password: str = Field(min_length=1, max_length=1024)
 
 
+class DesktopBridgeResult(Strict):
+    id: str = Field(min_length=16, max_length=64)
+    ok: bool
+    result: dict[str, Any] | None = None
+    error_code: str | None = Field(default=None, max_length=64)
+    attempted: bool = False
+
+
 class Preferences(Strict):
     name: str = Field(default="Your workspace", min_length=1, max_length=80)
     timezone: str = "Asia/Kolkata"

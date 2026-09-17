@@ -34,6 +34,7 @@ declare global {
       reloadWorkspace: () => void;
       reload: (name: DesktopProvider) => void;
       onStatus: (handler: (status: ProviderStatus) => void) => () => void;
+      onFocusProvider?: (handler: (name: DesktopProvider) => void) => () => void;
     };
   }
 }
@@ -127,9 +128,12 @@ function DesktopApp() {
     const unsubscribe = bridge.onStatus((next) => {
       setStatuses((previous) => ({ ...previous, [next.name]: next }));
     });
+    const unsubscribeFocus = bridge.onFocusProvider?.((name) => {
+      if (name === "whatsapp" || name === "discord" || name === "lifeos") setSelected(name);
+    }) || (() => {});
     bridge.select("lifeos");
     void load();
-    return unsubscribe;
+    return () => { unsubscribe(); unsubscribeFocus(); };
   }, [bridge, load]);
 
   useEffect(() => {

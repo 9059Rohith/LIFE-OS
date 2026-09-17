@@ -21,7 +21,7 @@ from .ingestion import Ingestion
 from .app_screens import register_app_screens
 from .work import register_work
 from .planning import APPS, SCENARIOS, seed
-from .schemas import EventInput, DemoInput, ApprovalInput, EditInput, LoginInput, Preferences, SpeakInput
+from .schemas import EventInput, DemoInput, ApprovalInput, EditInput, LoginInput, DesktopBridgeResult, Preferences, SpeakInput
 
 
 def create_app(settings=None):
@@ -31,6 +31,7 @@ def create_app(settings=None):
     voice_budget = VoiceBudget()
     diagnostic_lock = asyncio.Lock()
     providers = None
+    desktop_bridge = None
     cipher = None
     if settings.encryption_key:
         from cryptography.fernet import Fernet
@@ -54,7 +55,11 @@ def create_app(settings=None):
     if settings.mode == "live":
         from .providers import LiveProviders
 
-        providers = LiveProviders(settings, token_loader, token_saver)
+        if settings.whatsapp_bridge_enabled:
+            from .desktop_bridge import DesktopBridge
+
+            desktop_bridge = DesktopBridge()
+        providers = LiveProviders(settings, token_loader, token_saver, desktop_bridge)
     engine = Engine(db, settings, providers)
     ingestion = Ingestion(db, settings, engine, providers)
 
@@ -95,6 +100,8 @@ def create_app(settings=None):
                 if providers:
                     await providers.close()
             finally:
+                if desktop_bridge:
+                    desktop_bridge.close()
                 db.engine.dispose()
 
     app = FastAPI(title="LIFEOS", version="0.1.0", lifespan=lifespan)
@@ -102,6 +109,7 @@ def create_app(settings=None):
     app.state.engine = engine
     app.state.security = security
     app.state.ingestion = ingestion
+    app.state.desktop_bridge = desktop_bridge
     register_app_screens(app, settings, security, providers)
     register_work(app, db, security, engine)
     ingestion.register(app, security)
@@ -141,6 +149,25 @@ def create_app(settings=None):
         with db.engine.connect() as connection:
             connection.execute(text("SELECT 1"))
         return {"status": "ready", "database": "connected"}
+
+    @app.post("/api/desktop/bridge/next")
+    async def desktop_bridge_next(request: Request):
+        owner = security.require(request, True)
+        if not desktop_bridge or owner != "owner":
+            raise HTTPException(404, "Desktop bridge is unavailable")
+        job = await desktop_bridge.next_job()
+        return {"job": job}
+
+    @app.post("/api/desktop/bridge/result")
+    async def desktop_bridge_result(body: DesktopBridgeResult, request: Request):
+        owner = security.require(request, True)
+        if not desktop_bridge or owner != "owner":
+            raise HTTPException(404, "Desktop bridge is unavailable")
+        if len(json.dumps(body.result or {})) > 64000:
+            raise HTTPException(413, "Desktop bridge result is too large")
+        if not desktop_bridge.complete(body.id, body.model_dump(exclude={"id"})):
+            raise HTTPException(409, "Desktop job expired")
+        return {"status": "accepted"}
 
     def session_payload(session):
         preferences = engine.settings_for(session["owner"])

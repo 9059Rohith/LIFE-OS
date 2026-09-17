@@ -11,4 +11,10 @@ contextBridge.exposeInMainWorld("lifeosDesktop", Object.freeze({
     ipcRenderer.on("lifeos:status", listener);
     return () => ipcRenderer.removeListener("lifeos:status", listener);
   },
+  onFocusProvider: (handler) => {
+    if (typeof handler !== "function") return () => {};
+    const listener = (_event, name) => handler(name);
+    ipcRenderer.on("lifeos:focus-provider", listener);
+    return () => ipcRenderer.removeListener("lifeos:focus-provider", listener);
+  },
 }));

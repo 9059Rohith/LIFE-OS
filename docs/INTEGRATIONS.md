@@ -33,6 +33,10 @@ For a live flight scenario, the connected primary calendar must contain exactly 
 
 ## WhatsApp browser worker
 
+The Windows desktop bridge uses the exact WhatsApp Web page already shown inside LIFEOS. Enable `LIFEOS_WHATSAPP_BRIDGE_ENABLED=true` and set the single allowlisted `LIFEOS_WHATSAPP_CONTACT` on the live backend. After the owner signs in to WhatsApp Web in the desktop app, the backend can ask that view to verify the exact chat, read recent messages, perform an approved send, and report independent sent-indicator read-back. Jobs are short-lived, owner-session and CSRF protected, and a lost send result is marked uncertain. The local packaged app and backend have passed a real chat read through this path; live message delivery is a separate acceptance check.
+
+The Playwright worker below remains an optional local alternative.
+
 For the enrolled local Windows session, set `LIFEOS_WHATSAPP_HEADLESS=false` and use the desktop runtime documented in [LOCAL_LIVE.md](LOCAL_LIVE.md). The saved login was verified in that browser; headless Chromium was rejected by WhatsApp. No user-agent spoofing or browser-detection bypass is used. The worker accepts both the older and current English search labels and still requires an exact, unique contact match.
 
 This opt-in worker requires a dedicated local Chromium profile and one operator-configured conversation. Set `LIFEOS_WHATSAPP_ENABLED=true`, `LIFEOS_WHATSAPP_PROFILE_DIR=.private/whatsapp`, and `LIFEOS_WHATSAPP_CONTACT` to its exact display name. Install Chromium with `python -m playwright install chromium`. Use `python scripts/whatsapp_login.py` to sign in manually to the dedicated profile, then close the enrollment browser before running the worker. The operator must choose the intended conversation and avoid duplicate contact names.
