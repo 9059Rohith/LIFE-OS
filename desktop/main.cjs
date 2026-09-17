@@ -16,6 +16,7 @@ let shell;
 let active = "none";
 let offline = false;
 let shellLoading = false;
+let closing = false;
 let connectionTimer;
 let stage = { x: 180, y: 112, width: 760, height: 650 };
 const views = new Map();
@@ -152,6 +153,18 @@ app.whenReady().then(() => {
   };
   resize();
   window.on("resize", resize);
+  window.on("close", (event) => {
+    if (closing) return;
+    event.preventDefault();
+    closing = true;
+    const sessions = ["persist:lifeos-workspace", "persist:lifeos-discord", "persist:lifeos-whatsapp"]
+      .map((partition) => session.fromPartition(partition));
+    void Promise.allSettled(sessions.map((selected) => selected.cookies.flushStore()))
+      .finally(() => {
+        for (const selected of sessions) selected.flushStorageData();
+        if (window && !window.isDestroyed()) window.destroy();
+      });
+  });
   window.on("closed", () => {
     if (connectionTimer) clearInterval(connectionTimer);
     for (const view of views.values()) view.webContents.close();
