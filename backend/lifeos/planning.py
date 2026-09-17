@@ -11,7 +11,6 @@ APPS = {
     "whatsapp": "WhatsApp",
     "discord": "Discord",
     "drive": "Google Drive",
-    "maps": "Google Maps",
 }
 SCENARIOS = {
     "flight": "Your flight AI-742 tomorrow has been rescheduled from 11:30 AM to 6:40 AM.",
@@ -78,16 +77,6 @@ def seed(db, owner):
                 "mimeType": "text/plain",
                 "content": "ACME CLIENT PROPOSAL\nScope: Product strategy and launch plan.\nPrepared for Alex Chen.\nVersion: final.",
                 "webViewLink": "local://drive/proposal",
-            }
-        ],
-        "maps": [
-            {
-                "id": "airport-route",
-                "origin": "Indiranagar, Bengaluru",
-                "destination": "Kempegowda International Airport",
-                "duration_minutes": 55,
-                "distance_km": 39,
-                "source": "seeded local route fixture",
             }
         ],
     }
@@ -267,12 +256,11 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
     thread = find("gmail", lambda r: bool(r.get("recipient")))
     proposal = find("drive")
     if mode == "live":
-        travel = find("maps")
         candidates = meeting_candidates(
             [r for r in flat if r["application"] == "calendar"],
             entities,
             timezone,
-            int(travel.get("duration_minutes", 0)) if travel else 0,
+            0,
         )
         if len(candidates) != 1:
             event["status"] = "clarification_required"
@@ -313,8 +301,6 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
     zone = ZoneInfo(timezone)
     changed = datetime.fromisoformat(entities["date"] + "T" + entities["new_time"]).replace(tzinfo=zone)
     flight = entities["event_type"] == "flight_change"
-    duration = 55
-    route = find("maps")
     flight_duration = timedelta(hours=2, minutes=45)
     flight_record = None
     if flight and mode == "live":
@@ -346,16 +332,11 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
             "Live flight planning needs an exact flight-number calendar match with known duration. Connect this travel context before proposing changes."
         )
         return event
-    route_available = bool(
-        route and route.get("origin") and route.get("destination") and route.get("duration_minutes")
-    )
-    if route_available:
-        duration = int(route.get("duration_minutes", 55))
-    departure = changed - timedelta(minutes=duration + 120) if route_available else None
+    departure = None
     airport_window_start = changed - timedelta(minutes=120)
-    if flight and not route_available:
+    if flight:
         event["limitations"] = [
-            "Maps is unavailable. Route and pickup-time actions are omitted; check travel time yourself. Calendar checks cover the airport check-in and flight window only."
+            "Travel time is not calculated. Check your airport departure time yourself; pickup-time actions are omitted. Calendar checks cover the airport check-in and flight window only."
         ]
     landing = changed + flight_duration
     meeting_start = (
@@ -433,7 +414,7 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
             or args.get("destination", ""),
             "arguments": args,
             "risk": policy.risk.value,
-            "status": "pending" if type in ["read", "route"] else "awaiting_approval",
+            "status": "pending" if type == "read" else "awaiting_approval",
             "requires_approval": policy.requires_approval,
             "reversible": reversible,
             "dependencies": deps or [],
@@ -444,7 +425,6 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
         event["actions"].append(action)
         return action["id"]
 
-    route_id = None
     if flight:
         event["entities"].update(
             {
@@ -452,19 +432,6 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
                 "arrival_time": landing.isoformat(),
                 "calendar_conflict": conflict,
             }
-        )
-    if flight and route_available:
-        route_id = add(
-            "maps",
-            "route",
-            "Recalculate airport departure",
-            "Leave two hours for airport check-in and the route duration.",
-            {
-                "origin": route.get("origin", "") if route else "Home",
-                "destination": route.get("destination", "Airport") if route else "Airport",
-                "departure_time": departure.isoformat(),
-                "duration_minutes": duration,
-            },
         )
     calendar_id = None
     if not flight or conflict:
@@ -483,7 +450,7 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
                 "end": (proposed + (meeting_end - meeting_start)).isoformat(),
                 "summary": meeting.get("title", meeting.get("summary", "Client meeting")),
             },
-            [route_id] if route_id else [],
+            [],
             mode == "demo",
         )
     doc_id = None
@@ -542,18 +509,22 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
             },
             [calendar_id] if calendar_id else [],
         )
-    pickup = find("whatsapp")
-    if flight and pickup and route_available:
+    whatsapp = find("whatsapp", lambda r: r.get("verified") is True and bool(r.get("contact")))
+    if flight and whatsapp:
+        number = entities.get("flight") or "my flight"
         add(
             "whatsapp",
             "send",
-            "Update the airport pickup",
-            "An existing pickup conversation is affected by the new departure time.",
+            "Share the flight change in WhatsApp",
+            "The configured conversation was verified in a signed-in browser session. No pickup or airport departure time is inferred.",
             {
-                "contact": pickup.get("contact", ""),
-                "body": f"My flight now leaves at {changed:%H:%M} on {changed:%d %b}. Can we leave for the airport at {departure:%H:%M}? Thanks!",
+                "contact": whatsapp["contact"],
+                "body": (
+                    f"My flight {number} on {entities['date']} has moved to {changed:%H:%M %Z}. "
+                    "Please check your travel plans with me. I have not calculated an airport departure time."
+                ),
             },
-            [route_id],
+            [calendar_id] if calendar_id else [],
         )
     event["summary"] = (
         f"Found {len(event['actions'])} actions across {len(set(a['application'] for a in event['actions']))} applications. "

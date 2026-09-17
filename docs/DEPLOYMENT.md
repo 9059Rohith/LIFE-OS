@@ -2,12 +2,19 @@
 
 The provided image compiles React and runs FastAPI as a non-root user. Compose adds PostgreSQL with a named data volume and a readiness dependency. The application binds to host loopback by default. A production release still requires an operator-controlled HTTPS ingress, secrets, backups and live acceptance tests.
 
+## Windows desktop companion
+
+The current Windows installer is built with `cd desktop; npm ci; npm run dist:win` and written to `artifacts/windows/`. It is unsigned and contains the Electron shell only. Start the trusted local live backend with your existing private `.env` on `127.0.0.1:8010` before opening the installer. If the backend is down, a local offline screen explains the connection and automatically retries; it does not display sample account data. The actual Discord and WhatsApp sites appear in separate sandboxed views after the backend is available. The desktop shell does not bundle the backend, browser worker profile or account credentials, so this companion installer is not yet a self-contained production release.
+
+The live `My work` module requires database schema revision 2. Startup applies its owner/kind/time index without deleting existing records. Back up the live database before upgrading, as with any release. `GET /api/work/dashboard` returns one owner-scoped snapshot for the UI; projects, goals, tasks, habits, notes, local calendar entries, activity and reminders come from saved records.
+
 ## Local container demonstration
 
-Install Docker Engine/Desktop and Docker Compose. Copy `.env.example` to `.env`, then set `POSTGRES_PASSWORD` to a random hexadecimal value. Hex avoids URL escaping ambiguity in the Compose database URL.
+Install Docker Engine/Desktop and Docker Compose. Copy `.env.example` to `.env`, then set `POSTGRES_PASSWORD` to a random hexadecimal value, `LIFEOS_AUTH_PASSWORD` to a unique password of at least 16 characters, and `LIFEOS_ENCRYPTION_KEY` to a generated Fernet key. The example now defaults to live mode and starts with an empty workspace. Hex avoids URL escaping ambiguity in the Compose database URL.
 
 ```powershell
 python -c "import secrets; print(secrets.token_hex(32))"
+.venv\Scripts\python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 docker compose config --quiet
 docker compose up --build -d
 docker compose ps
@@ -16,6 +23,12 @@ docker compose ps
 Open `http://localhost:8000`. If that port is occupied, set `LIFEOS_PORT` in `.env` and add the resulting browser origin to `LIFEOS_ALLOWED_ORIGINS`. For Google OAuth, also change `LIFEOS_GOOGLE_REDIRECT_URI` to that host port; the template uses development port 8010. Compose overrides the SQLite URL with PostgreSQL. Startup runs `python -m lifeos.migrate` before Uvicorn. Probe `http://localhost:8000/health` and `/ready` (adjust the port if changed). Logs: `docker compose logs --tail 100 lifeos`. Stop without deleting records: `docker compose down`. Named volumes survive that command.
 
 Do not use `docker compose down -v` unless you intend to delete stored data. The application image omits browser automation binaries; ordinary API integrations and local demo mode do not require them.
+
+## Railway hosted live workspace
+
+The current source is deployed separately at `https://lifeos-live-production.up.railway.app` as the `lifeos-live` service in EU West. It uses one replica and its own volume mounted at `/app/data`; its database URL is `sqlite:////app/data/lifeos.db`. The service has `LIFEOS_MODE=live`, `LIFEOS_ENVIRONMENT=production`, a password, encryption key, HTTPS allowed origin, Google client settings, Discord bot settings and server-side OpenAI settings. The exact credentials are stored in Railway variables, not in this repository. Browser login, a work-record write and read-back across a service restart, deletion, empty state and Discord read access passed on 18 September 2026.
+
+The hosted Google owner is not connected. Add `https://lifeos-live-production.up.railway.app/api/integrations/google/callback` to the OAuth web client's authorized redirect URIs; the current Google response is `redirect_uri_mismatch`. Then complete owner consent through the hosted Integrations screen and test Gmail, Calendar and Drive there. Do not copy the local `.env` or OAuth token database into the public service. WhatsApp is disabled because this image has no browser worker. The older `lifeos-public` service remains an isolated demo.
 
 ## Railway public demo (single service)
 
@@ -33,7 +46,7 @@ LIFEOS_ALLOWED_ORIGINS=["https://your-public-domain"]
 LIFEOS_WHATSAPP_ENABLED=false
 ```
 
-This deployment uses demo application records. It does not include Playwright or Chromium and does not support a live WhatsApp session. Keep Gmail, Calendar, Discord, WhatsApp and Maps credentials off this service. An optional server-side OpenAI key enables real speech input/output; distribute the workspace password narrowly because voice requests incur provider usage. After Railway assigns its HTTPS domain, update `LIFEOS_ALLOWED_ORIGINS`, redeploy, then verify `/health`, `/ready`, sign-in, a demo workflow, and persistence after a restart. Download or back up `/app/data/lifeos.db` before deleting the volume; the volume provides persistence but is not a backup.
+This deployment uses demo application records. It does not include Playwright or Chromium and does not support a live WhatsApp session. Keep Gmail, Calendar, Discord and WhatsApp credentials off this service. An optional server-side OpenAI key enables real speech input/output; distribute the workspace password narrowly because voice requests incur provider usage. After Railway assigns its HTTPS domain, update `LIFEOS_ALLOWED_ORIGINS`, redeploy, then verify `/health`, `/ready`, sign-in, a demo workflow, and persistence after a restart. Download or back up `/app/data/lifeos.db` before deleting the volume; the volume provides persistence but is not a backup.
 
 ## Production configuration
 
@@ -76,7 +89,7 @@ Before migration, snapshot the database and retain the prior image. Restore a ba
 
 `.github/workflows/ci.yml` installs pinned direct Python dependencies and the npm lockfile, runs lint, backend tests, source credential scanning, dependency audits, frontend typechecking/build, Playwright and a container build. An unsuccessful gate blocks the job. No deployment credentials or external publication step is enabled.
 
-Before an operator publishes an image, require the successful CI run for that exact commit, review advisory findings, confirm a restore test, configure environment protection/approval, and record the resulting image digest. Base images use maintained version tags rather than immutable digests; pin reviewed digests for reproducible release builds. Python direct dependencies are pinned, but transitive resolution is not a complete hash-locked supply chain.
+Before an operator publishes an image, require the successful CI run for that exact commit, review advisory findings, confirm a restore test, configure environment protection/approval, and record the resulting image digest. Base images are pinned to reviewed digests; update them deliberately when security fixes are released. Python direct dependencies are pinned, but transitive resolution is not a complete hash-locked supply chain.
 
 ## Acceptance evidence still required
 

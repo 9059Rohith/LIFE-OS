@@ -1,0 +1,102 @@
+@import url("/fonts/dm-sans.css");
+@import url("/fonts/manrope.css");
+
+:root { font-family: "DM Sans", sans-serif; color: #26352e; background: #f8faf7; font-synthesis: none; }
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; width: 100%; height: 100%; min-height: 0; }
+button, textarea, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid #9bc497; outline-offset: 2px; }
+h2, p { margin: 0; }
+.desktop-app { display: grid; grid-template-columns: 84px minmax(420px, 1fr) 344px; height: 100%; min-height: 0; overflow: hidden; }
+.desktop-rail { display: flex; flex-direction: column; align-items: center; gap: 9px; background: #123b2e; color: #eaf5ec; padding: 19px 8px 16px; }
+.desktop-brand { width: 52px; height: 52px; display: grid; place-items: center; border: 0; border-radius: 16px; background: #d6f1b8; color: #123b2e; }
+.desktop-rail-divider { width: 36px; height: 1px; background: #456a54; margin: 10px 0 7px; }
+.desktop-rail-item { border: 0; border-radius: 14px; width: 64px; min-height: 64px; padding: 8px 4px; display: grid; justify-items: center; align-content: center; gap: 5px; background: transparent; color: #c1d7c9; font-size: 10px; font-weight: 650; }
+.desktop-rail-item.selected { background: #2b6548; color: #fff; box-shadow: inset 0 0 0 1px #5c9271; }
+.desktop-rail-item:hover { background: #24533f; color: #fff; }
+.desktop-rail-spacer { flex: 1; }
+.desktop-rail-caption { font-family: "Manrope", sans-serif; font-weight: 800; font-size: 9px; letter-spacing: .17em; color: #94b7a2; writing-mode: vertical-rl; transform: rotate(180deg); }
+.desktop-main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: #eef1ed; }
+.desktop-topbar { height: 68px; min-height: 68px; background: #fff; border-bottom: 1px solid #dce5dd; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.desktop-topbar-title { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.desktop-topbar-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; color: #1e6848; background: #e8f2e9; }
+.desktop-topbar-title strong { display: block; font: 750 13px "Manrope", sans-serif; }
+.desktop-topbar-title small { display: block; margin-top: 2px; font-size: 11px; color: #6b7a70; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.desktop-topbar-actions { display: flex; align-items: center; gap: 13px; }
+.desktop-topbar-actions button { width: 32px; height: 32px; display: grid; place-items: center; background: #f3f6f2; border: 1px solid #dce5dd; border-radius: 8px; }
+.desktop-view-state { display: inline-flex; align-items: center; gap: 7px; text-transform: capitalize; font-size: 11px; font-weight: 650; color: #61766a; }
+.desktop-view-state i, .desktop-dock-footer i { width: 7px; height: 7px; border-radius: 50%; background: #a4aca5; }
+.desktop-view-state.ready i, .desktop-dock-footer i { background: #48a767; }
+.desktop-view-state.error i { background: #d67368; }
+.desktop-view-state.loading i { background: #ddaa5d; }
+.desktop-stage { position: relative; flex: 1; min-height: 180px; }
+.desktop-stage-fallback { height: 100%; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; color: #66796b; padding: 28px; }
+.desktop-stage-fallback h2 { color: #264633; font: 750 20px "Manrope", sans-serif; }
+.desktop-stage-fallback p { max-width: 320px; font-size: 13px; line-height: 1.5; }
+.desktop-provider-error { position: absolute; bottom: 18px; left: 18px; right: 18px; display: flex; align-items: center; gap: 9px; padding: 12px; border-radius: 9px; background: #fff2ec; color: #9a3f30; font-size: 12px; box-shadow: 0 8px 22px #183e2b20; }
+.desktop-dock { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: auto; background: #fbfcfa; border-left: 1px solid #dce5dd; }
+.desktop-dock-heading { display: flex; align-items: center; gap: 10px; min-height: 68px; padding: 0 18px; border-bottom: 1px solid #e5ebe5; }
+.desktop-dock-mark { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 10px; background: #1a523a; color: #e8f7d8; }
+.desktop-dock-heading strong { display: block; font: 800 14px "Manrope", sans-serif; letter-spacing: -.02em; }
+.desktop-dock-heading span { display: block; color: #78877b; font-size: 10px; margin-top: 2px; }
+.desktop-dock-spark { margin-left: auto; color: #89b87c; }
+.desktop-compose { padding: 18px; display: grid; gap: 9px; border-bottom: 1px solid #e6ece6; }
+.desktop-compose label, .desktop-event-picker label { font-size: 11px; font-weight: 750; color: #405849; }
+.desktop-compose textarea { width: 100%; resize: vertical; min-height: 78px; max-height: 160px; border: 1px solid #d5dfd5; border-radius: 10px; padding: 11px 12px; background: #fff; color: #253b2b; font-size: 12px; line-height: 1.5; }
+.desktop-compose textarea::placeholder { color: #8c9b91; }
+.desktop-primary, .desktop-secondary { border-radius: 9px; padding: 10px 13px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 11px; font-weight: 750; }
+.desktop-primary { border: 1px solid #245d41; background: #245d41; color: #fff; }
+.desktop-primary:hover:not(:disabled) { background: #174b33; }
+.desktop-secondary { border: 1px solid #d8e4d8; background: #fff; color: #245d41; }
+.desktop-secondary:hover:not(:disabled) { background: #edf5ec; }
+.desktop-compose .desktop-primary { justify-self: end; }
+.desktop-event-picker { padding: 16px 18px 13px; display: grid; gap: 7px; }
+.desktop-select-wrap { position: relative; }
+.desktop-select-wrap select { appearance: none; width: 100%; padding: 9px 27px 9px 10px; border: 1px solid #d6e2d8; border-radius: 8px; background: #fff; color: #2d4033; font-size: 11px; }
+.desktop-select-wrap svg { position: absolute; top: 11px; right: 9px; pointer-events: none; color: #6d8171; }
+.desktop-dock-empty { padding: 34px 21px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; color: #2e6447; }
+.desktop-dock-empty h2 { font: 750 17px "Manrope", sans-serif; color: #253d2f; }
+.desktop-dock-empty p { font-size: 12px; line-height: 1.55; color: #718173; }
+.desktop-dock-empty-event { padding-top: 48px; }
+.desktop-event { min-height: 0; }
+.desktop-event-summary { padding: 13px 18px 17px; border-bottom: 1px solid #e5ebe5; }
+.desktop-kicker { display: inline-block; text-transform: uppercase; letter-spacing: .12em; color: #477457; font-size: 9px; font-weight: 800; }
+.desktop-event-summary h2 { margin-top: 6px; color: #203d2b; font: 750 16px/1.28 "Manrope", sans-serif; }
+.desktop-source { margin-top: 8px; font-size: 10px; line-height: 1.4; color: #637b69; overflow-wrap: anywhere; }
+.desktop-source strong { color: #315c40; }
+.desktop-source code { font: inherit; }
+.desktop-event-summary p { color: #6d7c70; font-size: 11px; line-height: 1.55; margin-top: 8px; }
+.desktop-progress-label { display: flex; justify-content: space-between; color: #6d7f70; font-size: 10px; margin-top: 17px; }
+.desktop-progress-label strong { color: #2d6544; }
+.desktop-progress { height: 5px; border-radius: 9px; background: #e2eae0; margin-top: 7px; overflow: hidden; }
+.desktop-progress span { display: block; height: 100%; background: #4a9d62; transition: width .35s ease; }
+.desktop-action-list { list-style: none; padding: 9px 10px 6px; margin: 0; }
+.desktop-action { margin: 4px 0; border: 1px solid transparent; border-radius: 10px; }
+.desktop-action.verified { background: #f2f8f0; }
+.desktop-action.attention { background: #fff6f1; }
+.desktop-action.active .desktop-action-icon { animation: desktop-action-pulse 1.5s ease-in-out infinite; }
+@keyframes desktop-action-pulse { 50% { background: #d8ecd9; box-shadow: 0 0 0 5px #d8ecd980; } }
+.desktop-action-head { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; padding: 10px 8px; background: transparent; border: 0; color: #354539; }
+.desktop-action-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: #edf2eb; color: #3e7950; }
+.desktop-action-copy { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.desktop-action-copy strong { font-size: 11px; font-weight: 750; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.desktop-action-copy small { color: #78867a; font-size: 10px; text-transform: capitalize; }
+.desktop-action-check { color: #3f9b5c; }
+.desktop-action-details { padding: 0 11px 12px 50px; display: grid; gap: 7px; color: #5c7061; font-size: 11px; line-height: 1.45; }
+.desktop-action-details strong { color: #435c49; }
+.desktop-action-body { padding: 9px; border-radius: 6px; border: 1px solid #e0e8df; background: #fff; white-space: pre-wrap; overflow-wrap: anywhere; }
+.desktop-action-error { color: #9a3f30; }
+.desktop-action-evidence { display: inline-flex; align-items: center; gap: 5px; color: #3f8253; }
+.desktop-action-buttons { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.desktop-action-buttons button, .desktop-link { display: inline-flex; align-items: center; gap: 4px; border: 0; background: transparent; color: #236347; padding: 3px 0; font-size: 10px; font-weight: 750; }
+.desktop-dock-controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 18px 20px; border-top: 1px solid #e5ebe5; }
+.desktop-dock-controls .desktop-link { width: 100%; justify-content: center; margin-top: 2px; }
+.desktop-no-actions { padding: 18px; color: #6f7d72; font-size: 11px; line-height: 1.5; }
+.desktop-error { margin: 12px 18px; padding: 10px; display: flex; align-items: flex-start; gap: 7px; background: #fff0e9; border: 1px solid #efcec3; border-radius: 8px; color: #a34536; font-size: 11px; line-height: 1.4; }
+.desktop-dock-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; border-top: 1px solid #e5ebe5; padding: 12px 18px; color: #78877b; font-size: 9px; }
+.desktop-dock-footer span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 1180px) { .desktop-app { grid-template-columns: 74px minmax(360px, 1fr) 310px; } .desktop-rail-item { width: 58px; } }
+@media (max-width: 900px) { .desktop-app { grid-template-columns: 62px minmax(300px, 1fr) 274px; } .desktop-rail-item { width: 51px; } .desktop-topbar { padding: 0 12px; } .desktop-dock-heading { padding: 0 12px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

@@ -66,12 +66,12 @@ class Engine:
 
     def settings_for(self, owner):
         return self.db.get(owner, "settings", owner + ":settings") or {
-            "name": "Alex Morgan",
+            "name": "Your workspace",
             "timezone": "Asia/Kolkata",
             "retention_days": 30,
         }
 
-    async def plan(self, owner, text, source, simulation):
+    async def plan(self, owner, text, source, simulation, source_record_id=None):
         started = time.perf_counter()
         preferences = self.settings_for(owner)
         self.db.prune_events(owner, preferences["retention_days"])
@@ -83,7 +83,7 @@ class Engine:
                 dict(
                     a, title=APPS[a["application"]], detail=f"{len(a['records'])} owner-scoped local records"
                 )
-                for a in self.db.list(owner, "app")
+                for a in self.db.list(owner, "app") if a["application"] in APPS
             ]
         else:
             if (
@@ -125,7 +125,15 @@ class Engine:
         event = make_plan(
             text, source, simulation, entities, context, preferences["timezone"], self.settings.mode
         )
-        self.log(owner, event, "detected", "Event received from " + source)
+        if source_record_id is not None:
+            event["source_ref"] = {"application": source, "record_id": source_record_id}
+        self.log(
+            owner,
+            event,
+            "detected",
+            "Event received from " + source
+            + (" · source ID " + source_record_id if source_record_id is not None else ""),
+        )
         for item in context:
             self.log(owner, event, "context", item.get("detail", "Context retrieved"), item["application"])
         self.log(
@@ -174,7 +182,10 @@ class Engine:
                 a["status"] = "awaiting_approval" if a["requires_approval"] else "pending"
 
     def validate_approval(self, event, a):
-        policy = classify(a["application"], a["type"])
+        try:
+            policy = classify(a["application"], a["type"])
+        except ValueError:
+            raise HTTPException(409, "This plan uses a removed integration. Create a new plan.") from None
         if policy.requires_approval != a["requires_approval"] or policy.risk != a["risk"]:
             raise HTTPException(403, "AUTHORIZATION_ERROR: action policy changed")
         if not a["requires_approval"]:
@@ -372,8 +383,8 @@ class Engine:
         existing = next((r for r in data["records"] if r.get("idempotency_key") == key), None)
         if existing:
             return {"id": existing["id"]}
-        if a["type"] in ["read", "route"]:
-            record = self.local_record(owner, app, args.get("file_id", "airport-route"))
+        if a["type"] == "read":
+            record = self.local_record(owner, app, args.get("file_id", ""))
             if not record:
                 raise ValueError("Record missing")
             if (

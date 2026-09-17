@@ -37,10 +37,8 @@ async def test_live_engine_approval_execution_readback_and_replay(tmp_path, scen
 
     def handler(request):
         path = request.url.path
-        if request.method in {"POST", "PATCH"} and "computeRoutes" not in path:
+        if request.method in {"POST", "PATCH"}:
             writes.append((request.method, path))
-        if path.endswith("computeRoutes"):
-            return httpx.Response(200, json={"routes": [{"duration": "4380s", "distanceMeters": 42000}]})
         if path.endswith("/calendars/primary/events"):
             return httpx.Response(200, json={"items": [calendar, flight]})
         if path.endswith("/events/meeting"):
@@ -108,9 +106,6 @@ async def test_live_engine_approval_execution_readback_and_replay(tmp_path, scen
         openai_api_key="",
         discord_bot_token="",
         whatsapp_enabled=False,
-        google_maps_api_key="fixture",
-        maps_origin="Configured home",
-        maps_destination="Configured airport",
         drive_proposal_file_id="proposal",
     )
 

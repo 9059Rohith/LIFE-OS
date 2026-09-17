@@ -1,0 +1,25 @@
+{
+  "name": "lifeos-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows shell for actual connected application windows",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "house.lifeos.desktop",
+    "productName": "LIFEOS",
+    "artifactName": "LIFEOS-Desktop-${version}-${arch}.${ext}",
+    "directories": { "output": "../artifacts/windows" },
+    "files": ["main.cjs", "navigation.cjs", "preload.cjs", "offline.html", "package.json"],
+    "win": { "target": ["nsis"], "icon": "icon.ico", "signExecutable": false },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+  },
+  "devDependencies": {
+    "electron": "44.4.1",
+    "electron-builder": "26.15.3"
+  }
+}

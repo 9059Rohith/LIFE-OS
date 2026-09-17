@@ -1,5 +1,5 @@
 export type AppName =
-  "gmail" | "calendar" | "discord" | "whatsapp" | "drive" | "maps";
+  "gmail" | "calendar" | "discord" | "whatsapp" | "drive";
 export interface Action {
   id: string;
   application: AppName;
@@ -38,6 +38,7 @@ export interface LifeEvent {
   title: string;
   event_type: string;
   source: string;
+  source_ref?: { application: string; record_id: string };
   status: string;
   created_at: string;
   version: number;
@@ -67,4 +68,4 @@ export interface AppRecords {
   records: Record<string, unknown>[];
 }
 export type Page =
-  "overview" | "integrations" | "audit" | "settings" | "applications";
+  "overview" | "work" | "integrations" | "audit" | "settings" | "applications";

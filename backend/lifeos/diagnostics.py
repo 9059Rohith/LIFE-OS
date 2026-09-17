@@ -28,21 +28,16 @@ async def connection_checks(settings, providers, owner):
             try:
                 await asyncio.wait_for(providers.check_whatsapp(), timeout=90)
                 return result(key, "read_access_verified", "Signed-in browser, exact chat and composer verified. A message is sent only through an approved action.")
+            except ProviderError as exc:
+                if exc.code == "BROWSER_PROFILE_IN_USE":
+                    return result(key, "needs_attention", "Another LIFEOS process is using the dedicated WhatsApp browser profile. Close that process and check again.")
+                return result(key, "needs_attention", "The dedicated WhatsApp browser or exact configured chat could not be verified. Check the browser session and chat name.")
             except Exception:
                 return result(key, "needs_attention", "The dedicated WhatsApp browser or exact configured chat could not be verified. Check the browser session and chat name.")
         if key == "discord" and not (settings.discord_bot_token and settings.discord_channel_id):
             return result(
                 key, "not_connected", "Configure a bot and channel, then invite the bot to that server."
             )
-        if key == "maps":
-            if not settings.google_maps_api_key:
-                return result(key, "not_connected", "Add a Google Routes API key to calculate travel times.")
-            if not (settings.maps_origin and settings.maps_destination):
-                return result(
-                    key,
-                    "needs_attention",
-                    "Set the route origin and destination. The API key must allow Routes API with billing enabled; key presence alone is not verified access.",
-                )
         try:
             if key == "gmail":
                 call = providers._google(owner, "GET", GMAIL + "/profile")
@@ -62,7 +57,7 @@ async def connection_checks(settings, providers, owner):
                     params={"limit": 1},
                 )
             else:
-                call = providers._route_context()
+                raise ValueError(f"Unsupported integration: {key}")
             await asyncio.wait_for(call, timeout=25)
             return result(
                 key,
@@ -81,7 +76,6 @@ async def connection_checks(settings, providers, owner):
             if exc.code == "AUTHORIZATION_ERROR":
                 detail = {
                     "discord": "Channel access denied. Invite the bot and grant View Channel and Read Message History; sending also needs Send Messages.",
-                    "maps": "Routes access denied. Enable Routes API and billing, and allow Routes API in this key's restrictions.",
                 }.get(
                     key,
                     "Access denied. Reconnect Google with the required permission and enable this API in Google Cloud.",

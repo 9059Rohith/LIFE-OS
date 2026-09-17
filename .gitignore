@@ -22,4 +22,5 @@ data/
 .private/
 *.tsbuildinfo
 artifacts/private/
+artifacts/windows/
 artifacts/pytest*/

@@ -184,14 +184,3 @@ def register_app_screens(app, settings, security, providers):
             raise HTTPException(504, "WhatsApp chat did not respond in time.") from None
         except Exception:
             raise HTTPException(502, "WhatsApp browser unavailable. Check Integrations and retry.") from None
-
-    @app.get("/api/apps/maps")
-    async def maps(request: Request):
-        owner_for(request)
-        return {
-            "application": "maps", "title": "Travel route", "items": [],
-            "status": "needs_attention" if not (settings.maps_origin and settings.maps_destination) else "configured",
-            "message": "Set your actual origin and destination in LIFEOS configuration. The Routes API key must also be permitted for Routes requests."
-            if not (settings.maps_origin and settings.maps_destination)
-            else "Route configured. Use a planning event to calculate travel time.",
-        }

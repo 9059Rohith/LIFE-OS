@@ -23,14 +23,13 @@ ALLOWED: dict[str, frozenset[str]] = {
     "discord": frozenset({"send"}),
     "whatsapp": frozenset({"send"}),
     "drive": frozenset({"read"}),
-    "maps": frozenset({"route"}),
 }
 
 
 def classify(application: str, action_type: str) -> ActionPolicy:
     if action_type not in ALLOWED.get(application, frozenset()):
         raise ValueError("Unknown application or action type is denied")
-    readonly = action_type in {"read", "route"}
+    readonly = action_type == "read"
     return ActionPolicy(Risk.LOW if readonly else Risk.MEDIUM, not readonly)
 
 

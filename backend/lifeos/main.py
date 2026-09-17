@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request, Response, HTTPException, UploadFile, File
-from fastapi.responses import RedirectResponse, FileResponse, JSONResponse
+from fastapi.responses import RedirectResponse, FileResponse, JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from .config import Settings
@@ -19,6 +19,7 @@ from .telemetry import scope as usage_scope, snapshot as usage_snapshot
 from .privacy import register_privacy
 from .ingestion import Ingestion
 from .app_screens import register_app_screens
+from .work import register_work
 from .planning import APPS, SCENARIOS, seed
 from .schemas import EventInput, DemoInput, ApprovalInput, EditInput, LoginInput, Preferences, SpeakInput
 
@@ -102,6 +103,7 @@ def create_app(settings=None):
     app.state.security = security
     app.state.ingestion = ingestion
     register_app_screens(app, settings, security, providers)
+    register_work(app, db, security, engine)
     ingestion.register(app, security)
     register_privacy(app, db, security, engine, pause_ingestion=ingestion.pause)
     app.add_middleware(BodyLimitMiddleware)
@@ -109,7 +111,7 @@ def create_app(settings=None):
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["Content-Type", "X-CSRF-Token"],
     )
 
@@ -367,7 +369,9 @@ def create_app(settings=None):
     @app.get("/api/demo/apps")
     def apps(request: Request):
         owner = security.require(request)
-        return db.list(owner, "app") if settings.mode == "demo" else []
+        if settings.mode != "demo":
+            return []
+        return [item for item in db.list(owner, "app") if item["application"] in APPS]
 
     @app.get("/api/settings")
     def preferences(request: Request):
@@ -430,7 +434,6 @@ def create_app(settings=None):
             "calendar": google,
             "drive": google,
             "discord": bool(settings.discord_bot_token and settings.discord_channel_id),
-            "maps": bool(settings.google_maps_api_key),
             "whatsapp": settings.whatsapp_enabled,
         }
         return [
@@ -483,29 +486,25 @@ def create_app(settings=None):
         owner = security.require(request)
         if settings.mode != "live" or not settings.google_client_id:
             raise HTTPException(409, "Google OAuth requires live mode and configured credentials")
+        security.rate("oauth-connect:" + owner, 5)
         from .oauth import create_pkce, authorization_url
 
         verifier, challenge = create_pkce()
         state = secrets.token_urlsafe(32)
-        db.put(
-            owner,
-            "oauth",
-            owner + ":oauth",
-            {"state": digest(state), "verifier": verifier, "expires": time.time() + 600},
-        )
+        db.put("system", "oauth_state", digest(state), {
+            "owner": owner, "verifier": verifier, "expires": time.time() + 600,
+        })
         return {"url": authorization_url(settings, state, challenge)}
 
     @app.get("/api/integrations/google/callback")
     async def callback(request: Request, code: str = "", state: str = ""):
-        owner = security.require(request)
-        pending = db.get(owner, "oauth", owner + ":oauth")
-        if (
-            not pending
-            or pending["expires"] < time.time()
-            or not hmac.compare_digest(pending["state"], digest(state))
-        ):
+        security.rate("oauth-callback:" + (request.client.host if request.client else "unknown"), 15)
+        if not code or not state or len(state) > 256:
             raise HTTPException(403, "OAuth state invalid or expired")
-        db.delete_kind(owner, "oauth")
+        pending = db.consume("system", "oauth_state", digest(state))
+        if not pending or pending["expires"] < time.time():
+            raise HTTPException(403, "OAuth state invalid or expired")
+        owner = pending["owner"]
         from .oauth import exchange_code
 
         try:
@@ -514,7 +513,15 @@ def create_app(settings=None):
             db.delete(owner, "integration_check", owner + ":integration_check")
         except Exception:
             raise HTTPException(502, "AUTHENTICATION_ERROR: Google authorization failed") from None
-        return RedirectResponse("/?integration=google")
+        callback_session = security.session(request)
+        if callback_session and callback_session["owner"] == owner:
+            return RedirectResponse("/?integration=google")
+        return HTMLResponse(
+            "<!doctype html><html lang='en'><meta charset='utf-8'>"
+            "<title>Google connected to LIFEOS</title>"
+            "<body><h1>Google connected to LIFEOS</h1>"
+            "<p>You can return to the LIFEOS desktop window.</p></body></html>"
+        )
 
     @app.post("/api/voice/transcribe")
     async def transcribe(request: Request, audio: UploadFile = File(...)):

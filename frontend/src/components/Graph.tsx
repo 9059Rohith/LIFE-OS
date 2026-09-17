@@ -69,10 +69,10 @@ export function Graph({
     return () => observer.disconnect();
   }, [event, view]);
   const primary = actions.filter(
-    (a) => !["maps", "drive"].includes(a.application),
+    (a) => a.application !== "drive",
   );
   const support = actions.filter((a) =>
-    ["maps", "drive"].includes(a.application),
+    a.application === "drive",
   );
   return (
     <section className="panel graph-panel" aria-label="Consequence graph">

@@ -1,16 +1,14 @@
 # Live provider verification
 
-Checked 2026-09-13 against the native live runner and its PostgreSQL database using
+This section records a **historical 2026-09-13** check against the native live runner and its PostgreSQL database using
 `scripts/check_release_integrations.py`. The private machine-readable report is
 `.private/release-integration-check.json`. No credentials, account content, or
-encrypted token values are included in either report.
+encrypted token values are included in either report. The 18 September live recheck supersedes these connection states: Gmail, Calendar, Drive, Discord and WhatsApp all returned `read_access_verified`. Google Maps was removed from the application and checker.
 
 | Integration | Observed result | Remaining external requirement |
 | --- | --- | --- |
-| Google OAuth | Client ID/secret are present, but the actual live PostgreSQL owner grant is absent. | Complete **Connect Google** in the live app, then rerun verification. Gmail, Calendar, and Drive access cannot be verified before consent. |
-| Google Maps Routes | Key is present. A real route calculation returned HTTP 403 with provider reason `API_KEY_SERVICE_BLOCKED`. | Allow the Routes API in this key's API restrictions in its Google Cloud project; rerun to identify any further provider requirements. |
-| Configured travel route | Both origin and destination are absent. | Supply the actual origin and destination. The validation request used India Gate to Indira Gandhi International Airport only as synthetic public landmarks; it is not the user's itinerary. |
-| Discord | Bot identity authenticated. Reading configured channel metadata returned HTTP 403. | Give this bot access to the intended channel or configure a channel it can access. Send/history permissions remain unverified because the metadata request was denied. |
+| Google OAuth | The owner grant was absent on 13 September. | Owner consent has since been completed; Gmail, Calendar and Drive read access passed on 18 September. |
+| Discord | Channel metadata returned HTTP 403 on 13 September. | Permissions were later corrected; configured channel read access passed on 18 September. |
 
 The checker does not launch browsers, inspect browser profiles, send messages,
 refresh OAuth tokens, or mutate provider/database records. It loads the native
@@ -24,8 +22,7 @@ Run from the repository root:
 ```
 
 Success on a read-only check does not prove mutation permissions or production
-deployment readiness. The script reports only bounded read access and route
-calculation; it never sends a test message.
+deployment readiness. The script reports only bounded read access; it never sends a test message.
 
 ## Local workflow regression evidence
 

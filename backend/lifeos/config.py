@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="LIFEOS_", env_file=".env", extra="ignore", hide_input_in_errors=True
     )
-    mode: Literal["demo", "live"] = "demo"
+    mode: Literal["demo", "live"] = "live"
     environment: Literal["development", "production", "test"] = "development"
     database_url: str = "sqlite:///./lifeos.db"
     auth_password: str = ""
@@ -27,9 +27,6 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/api/integrations/google/callback"
     discord_bot_token: str = ""
     discord_channel_id: str = ""
-    google_maps_api_key: str = ""
-    maps_origin: str = ""
-    maps_destination: str = ""
     drive_proposal_file_id: str = ""
     whatsapp_enabled: bool = False
     whatsapp_headless: bool = True

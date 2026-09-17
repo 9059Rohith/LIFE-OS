@@ -82,6 +82,16 @@ export function WorkspacePages({
       loadGeneration.current += 1;
     };
   }, [load]);
+  useEffect(() => {
+    if (page !== "integrations") return;
+    const refresh = () => { if (!document.hidden) void load(); };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [load, page]);
   async function connect() {
     try {
       const result = await api<{ url: string }>("/integrations/google/connect");
@@ -131,7 +141,7 @@ export function WorkspacePages({
             {page === "integrations"
               ? "Explicit access. Clear boundaries. One place to manage it all."
               : page === "applications"
-                ? mode === "demo" ? "Persisted local application state. These are simulated services, not your personal accounts." : "Browse your connected accounts without leaving LIFEOS."
+                ? mode === "demo" ? "Persisted local application state. These are simulated services, not your personal accounts." : "Live account summaries appear here. The Windows app opens the actual Discord and WhatsApp websites."
                 : page === "audit"
                   ? "Trace approvals, execution, and independent verification."
                   : "Preferences for this workspace."}

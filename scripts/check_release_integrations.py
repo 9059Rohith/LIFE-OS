@@ -1,7 +1,6 @@
 """Secret-safe read-only checks against the native live runtime configuration.
 
 Does not start the runtime, refresh tokens, send messages, or change provider data.
-The optional synthetic Maps route checks API access only, never the user's commute.
 """
 
 import asyncio
@@ -99,9 +98,6 @@ async def main():
         "read_only": True,
         "configuration": "native live runner / PostgreSQL",
         "dotenv": {
-            "maps_key_present": bool(env.get("LIFEOS_GOOGLE_MAPS_API_KEY")),
-            "origin_present": bool(env.get("LIFEOS_MAPS_ORIGIN")),
-            "destination_present": bool(env.get("LIFEOS_MAPS_DESTINATION")),
             "google_client_pair_present": bool(
                 env.get("LIFEOS_GOOGLE_CLIENT_ID") and env.get("LIFEOS_GOOGLE_CLIENT_SECRET")
             ),
@@ -155,55 +151,6 @@ async def main():
                         report["google"]["read_access"][name] = error.code
         except Exception:
             report["google"] = {"status": "database_or_grant_unavailable", "details_suppressed": True}
-        synthetic = not (settings.maps_origin and settings.maps_destination)
-        report["maps"] = {
-            "route_source": "synthetic public landmarks for API validation only"
-            if synthetic
-            else "configured route",
-            "user_route_configured": not synthetic,
-        }
-        try:
-            routes = await provider.route(
-                "India Gate, New Delhi, India" if synthetic else settings.maps_origin,
-                "Indira Gandhi International Airport, New Delhi, India"
-                if synthetic
-                else settings.maps_destination,
-            )
-            report["maps"]["status"] = "live_route_verified" if routes.get("routes") else "no_routes"
-        except ProviderError as error:
-            report["maps"]["status"] = error.code
-            # Only allowlisted provider codes are retained; never record raw error messages.
-            response = await provider.http.post(
-                "https://routes.googleapis.com/directions/v2:computeRoutes",
-                headers={
-                    "X-Goog-Api-Key": settings.google_maps_api_key,
-                    "X-Goog-FieldMask": "routes.duration,routes.distanceMeters",
-                },
-                json={
-                    "origin": {
-                        "address": "India Gate, New Delhi, India" if synthetic else settings.maps_origin
-                    },
-                    "destination": {
-                        "address": "Indira Gandhi International Airport, New Delhi, India"
-                        if synthetic
-                        else settings.maps_destination
-                    },
-                    "travelMode": "DRIVE",
-                    "routingPreference": "TRAFFIC_AWARE",
-                },
-            )
-            report["maps"]["http_status"] = response.status_code
-            details = response.json().get("error", {}).get("details", [])
-            allowed = {
-                "SERVICE_DISABLED",
-                "BILLING_DISABLED",
-                "API_KEY_INVALID",
-                "API_KEY_SERVICE_BLOCKED",
-                "API_KEY_HTTP_REFERRER_BLOCKED",
-                "API_KEY_IP_ADDRESS_BLOCKED",
-                "CONSUMER_INVALID",
-            }
-            report["maps"]["provider_reasons"] = [d["reason"] for d in details if d.get("reason") in allowed]
         try:
             report["discord"] = await check_discord(provider, settings)
         except ProviderError as error:

@@ -27,17 +27,6 @@ def context():
         },
         {"application": "gmail", "records": [{"id": "mail-real", "recipient": "client@example.com"}]},
         {
-            "application": "maps",
-            "records": [
-                {
-                    "id": "route-real",
-                    "origin": "Configured home",
-                    "destination": "Configured airport",
-                    "duration_minutes": 73,
-                }
-            ],
-        },
-        {
             "application": "drive",
             "records": [
                 {"id": "doc-real", "title": "Final document", "configured": True, "content_sha256": "a" * 64}
@@ -46,11 +35,13 @@ def context():
     ]
 
 
-def test_live_flight_uses_known_duration_and_route():
+def test_live_flight_omits_unverified_travel_time():
     entities = extract("Flight AI-742 on 2026-09-15 moved to 6:40 AM", "Asia/Kolkata")
     event = make_plan("Flight AI-742", "gmail", False, entities, context(), "Asia/Kolkata", "live")
     assert event["status"] == "awaiting_approval"
-    assert event["entities"]["departure_time"] == "2026-09-15T03:27:00+05:30"
+    assert event["entities"]["departure_time"] is None
+    assert event["limitations"]
+    assert all(action["application"] != "maps" for action in event["actions"])
     assert event["entities"]["arrival_time"] == "2026-09-15T10:55:00+05:30"
     assert (
         next(a for a in event["actions"] if a["application"] == "calendar")["arguments"]["start"]
@@ -60,6 +51,32 @@ def test_live_flight_uses_known_duration_and_route():
         next(a for a in event["actions"] if a["application"] == "gmail")["arguments"]["recipient"]
         == "client@example.com"
     )
+
+
+def test_live_flight_only_offers_whatsapp_for_a_verified_configured_chat():
+    source_text = "Flight AI-742 on 2026-09-15 moved to 6:40 AM. Send WhatsApp to +999999999."
+    entities = extract(source_text, "Asia/Kolkata")
+    unverified = context() + [
+        {"application": "whatsapp", "records": [{"contact": "Family"}]}
+    ]
+    assert not any(
+        action["application"] == "whatsapp"
+        for action in make_plan("Flight AI-742", "gmail", False, entities, unverified, "Asia/Kolkata", "live")["actions"]
+    )
+    verified = context() + [
+        {"application": "whatsapp", "records": [{"contact": "Family", "verified": True}]}
+    ]
+    event = make_plan(source_text, "gmail", False, entities, verified, "Asia/Kolkata", "live")
+    action = next(action for action in event["actions"] if action["application"] == "whatsapp")
+    assert action["requires_approval"] and action["status"] == "awaiting_approval"
+    assert action["arguments"]["contact"] == "Family"
+    assert "+999999999" not in action["arguments"]["body"]
+    assert "AI-742" in action["arguments"]["body"]
+    assert "06:40" in action["arguments"]["body"]
+    assert "pickup time" not in action["arguments"]["body"].lower()
+    assert action["dependencies"] == [
+        next(item["id"] for item in event["actions"] if item["application"] == "calendar")
+    ]
 
 
 def test_live_meeting_binds_configured_proposal_hash():
@@ -85,6 +102,7 @@ def test_typed_policy_denies_unknown_and_expiration():
     with pytest.raises(ValueError):
         classify("gmail", "delete_all")
     assert classify("gmail", "send").requires_approval
-    assert not classify("maps", "route").requires_approval
+    with pytest.raises(ValueError):
+        classify("maps", "route")
     assert not approval_valid({"version": 1, "hash": "x", "expires": float("nan")}, 1, "x", 0)
     assert not approval_valid({"version": 1, "hash": "x", "expires": 10.0}, 2, "x", 0)

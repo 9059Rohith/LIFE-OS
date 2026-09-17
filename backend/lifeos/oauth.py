@@ -1,4 +1,4 @@
-"""Google OAuth helpers. The API layer owns expiring, single-use session-bound state."""
+"""Google OAuth helpers. The API layer owns expiring, single-use owner-bound state."""
 
 import base64
 import hashlib

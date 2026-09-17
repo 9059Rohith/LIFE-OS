@@ -2,21 +2,23 @@
 
 > Something changed. LIFEOS handles what happens next.
 
-A delayed flight affects a pickup, a meeting, a team update and a travel document. LIFEOS turns the event into a dependency graph, proposes changes, asks for approval, executes the approved plan and reads back the result. The useful unit is the **resolved event**, with evidence across applications.
+A changed flight can affect a meeting and the people who need to know. LIFEOS finds known calendar and conversation targets, proposes changes, asks for approval, executes approved actions and reads back the result. It does not infer airport travel or pickup times.
 
-This repository includes a React command center, a FastAPI service, durable application state, local flight and meeting scenarios, provider adapters and deployment configuration. **Demo mode changes real local database records. It does not log into Gmail or pretend to send WhatsApp messages.** Live provider and microphone checks require credentials and hardware; see [verification status](docs/VERIFICATION.md). This is a single-owner deployment design, not a reviewed multitenant service.
+This repository includes a React command center, a FastAPI service, durable application state, a Windows shell for the actual Discord and WhatsApp websites, provider adapters and deployment configuration. The default configuration is live mode with an empty workspace. A separate live Railway service is now deployed, while the existing public demo retains labeled local records. **The live product is not yet fully accepted**; see [current evidence](docs/LIVE_ACCEPTANCE_2026-09-17.md). This is a single-owner deployment design, not a reviewed multitenant service.
+
+The **My work** screen saves projects, goals, tasks, habits and notes in the owner database. Task completion updates linked goal/project progress; dated check-ins drive habit streaks; due dates and goal targets appear in a local agenda alongside Google Calendar events when connected. Activity and reminders come from saved changes, so a new live workspace shows empty states instead of invented statistics.
+
+## Hosted live workspace
+
+The password-protected live workspace is at **https://lifeos-live-production.up.railway.app**. It runs the current source against a separate persistent volume. Public browser login, an initially empty work screen, a saved task surviving a service restart, deletion, and Discord read access passed on 18 September 2026. Gmail, Calendar, and Drive are not connected on that hosted owner account: the Google OAuth client currently rejects the new callback URI. WhatsApp browser automation is disabled in the hosted container. See [release status](docs/RELEASE_STATUS.md) before presenting cross-provider execution as complete.
 
 ## Public demo
 
 The password-protected demo is deployed at **https://lifeos-public-production.up.railway.app**. Ask the installation owner for the workspace password. It runs the flight and meeting workflows against persistent demo application records; the public installation is separate from the owner's live Google, Discord and WhatsApp accounts. The deployment and acceptance record is in [public demo release](docs/PUBLIC_DEMO_RELEASE.md).
 
-## Screenshots
+## Verification
 
-Current release evidence and remaining live-provider blockers: [release status](docs/RELEASE_STATUS.md). The current implementation includes opt-in [Gmail/Discord monitoring](docs/SOURCE_MONITORING.md), conditional [live Calendar update undo](docs/LIVE_UNDO.md), and [local data controls and measured usage](docs/PRIVACY_AND_USAGE.md). Account acceptance must be completed before calling the live installation production-ready.
-
-![LIFEOS consequence dashboard](docs/screenshots/overview.png)
-
-[Resolved event and evidence](docs/screenshots/resolved.png) · [Mobile layout](docs/screenshots/mobile.png)
+Current evidence and remaining live-provider blockers: [live acceptance](docs/LIVE_ACCEPTANCE_2026-09-17.md) and [release status](docs/RELEASE_STATUS.md). The current implementation includes opt-in [Gmail/Discord monitoring](docs/SOURCE_MONITORING.md), conditional [live Calendar update undo](docs/LIVE_UNDO.md), and [local data controls and measured usage](docs/PRIVACY_AND_USAGE.md). Historical screenshots in the repository use isolated demo records and are not live-account proof.
 
 ## Architecture
 
@@ -43,14 +45,15 @@ The backend owns planning, risk, authorization and execution. Model output is ty
 
 ```mermaid
 flowchart LR
-  F[Flight delayed] --> M[Calendar conflict]
-  F --> P[Pickup change]
-  M --> T[Team notification]
-  F --> D[Travel document update]
-  M --> V[Verify calendar]
-  P --> W[Verify message]
-  T --> N[Verify team update]
-  D --> R[Verify document]
+  F[Flight time changed] --> M[Known Calendar conflict]
+  M --> C[Proposed Calendar update]
+  C --> V[Calendar read-back]
+  M --> G[Proposed Gmail notification]
+  M --> T[Proposed Discord notification]
+  F --> W[Proposed WhatsApp notification for a verified configured chat]
+  G --> GR[Gmail read-back]
+  T --> TR[Discord read-back]
+  W --> WR[WhatsApp read-back]
 ```
 
 Explicit orchestration keeps the approval boundary inspectable. Chained voice uses microphone capture → transcription → the same planning/approval path → speech synthesis. Realtime conversational streaming is not implemented. Approval requires an explicit command bound to a reviewed plan; an unbound “yes” never authorizes an application mutation.
@@ -64,6 +67,7 @@ python -m venv .venv
 .venv\Scripts\python -m pip install --upgrade pip==26.2.1
 .venv\Scripts\python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
+# Set LIFEOS_AUTH_PASSWORD (16+ characters) and a generated LIFEOS_ENCRYPTION_KEY in .env.
 .venv\Scripts\python -m lifeos.migrate
 .venv\Scripts\python -m uvicorn lifeos.main:app --host 127.0.0.1 --port 8010
 ```
@@ -76,7 +80,7 @@ npm ci
 npm run dev -- --host 127.0.0.1
 ```
 
-Open `http://127.0.0.1:5173`. The development frontend proxies to API port 8010; set `LIFEOS_API_URL` when using another backend URL. On macOS/Linux replace `.venv\Scripts\python` with `.venv/bin/python` and copy the environment file with `cp .env.example .env`. No provider keys are required for the local demo. The database is stored in `data/`; restarting preserves it.
+Open `http://127.0.0.1:5173`. The development frontend proxies to API port 8010; set `LIFEOS_API_URL` when using another backend URL. On macOS/Linux replace `.venv\Scripts\python` with `.venv/bin/python` and copy the environment file with `cp .env.example .env`. The live workspace starts empty; connect authorized providers before expecting an actionable cross-app plan. The database is stored in `data/`; restarting preserves it.
 
 To serve the compiled frontend from the backend:
 
@@ -86,7 +90,20 @@ $env:LIFEOS_STATIC_DIR = (Resolve-Path frontend/dist).Path
 .venv\Scripts\python -m uvicorn lifeos.main:app --host 127.0.0.1 --port 8010
 ```
 
-## 3-Minute Demo
+## Open the actual Discord and WhatsApp sites in LIFEOS
+
+On Windows, keep the local live backend running at `http://127.0.0.1:8010` with the compiled frontend, then launch the desktop window:
+
+```powershell
+npm --prefix desktop ci
+npm --prefix desktop start
+```
+
+The center of this window is the real Discord or WhatsApp Web page in an isolated persistent Electron session. Sign in to each site inside its own view; LIFEOS never copies those provider credentials into the backend. The right dock reads real LIFEOS events and lets the owner review and approve actions. A page-load badge only reports that the site rendered; it does not claim that its account is connected. An unsigned Windows companion installer can be built with `npm --prefix desktop run dist:win`; it still needs the local backend. The backend's approved WhatsApp worker currently uses a separate browser profile, so the visible WhatsApp session is not yet the sender for approved actions.
+
+## Isolated legacy demo
+
+Use `LIFEOS_MODE=demo` only in a separate test environment. Its local records are not connected accounts and do not count as live acceptance.
 
 1. Start LIFEOS and click **Run Hero Demo**.
 2. Inspect the local Gmail event and the discovered Calendar conflict.
@@ -107,11 +124,10 @@ For a voice demo, configure `LIFEOS_OPENAI_API_KEY`, restart, allow microphone a
 | Google Calendar | Google OAuth; event updates and read-back | Persistent event records |
 | Google Drive | Google OAuth; document/file access | Persistent document records |
 | Discord | Bot token and explicit channel | Persistent channel records |
-| Google Maps | API key for route context | Scenario route context |
 | WhatsApp | Opt-in Playwright browser session, explicit contact | Persistent message records |
 | OpenAI | Structured event extraction, transcription, speech | Deterministic local event handling without keys |
 
-All backend settings use the `LIFEOS_` prefix. [.env.example](.env.example) lists the supported configuration. Secrets belong only on the server; never use a `VITE_` variable for a credential. `LIFEOS_MODE=demo` selects local providers; `live` selects configured provider operations. `LIFEOS_ENVIRONMENT=production` enables stricter startup requirements. Use a long unique owner password and a Fernet encryption key for live credentials. For live route context, set explicit `LIFEOS_MAPS_ORIGIN` and `LIFEOS_MAPS_DESTINATION` alongside the Maps key. Optionally select a proposal with `LIFEOS_DRIVE_PROPOSAL_FILE_ID`; supported proposal content is Google Docs or text.
+All backend settings use the `LIFEOS_` prefix. [.env.example](.env.example) lists the supported configuration. Secrets belong only on the server; never use a `VITE_` variable for a credential. `LIFEOS_MODE=demo` selects local providers; `live` selects configured provider operations. `LIFEOS_ENVIRONMENT=production` enables stricter startup requirements. Use a long unique owner password and a Fernet encryption key for live credentials. Flight plans do not calculate travel time or propose pickup times; check those manually. Optionally select a proposal with `LIFEOS_DRIVE_PROPOSAL_FILE_ID`; supported proposal content is Google Docs or text.
 
 For Google OAuth, create a Web OAuth client in your Google Cloud project, configure the consent screen and test users, enable the Gmail, Calendar and Drive APIs, then register the exact callback from `LIFEOS_GOOGLE_REDIRECT_URI`. Set the client ID/secret and use **Connect Google** in Integrations. Local default: `http://localhost:8010/api/integrations/google/callback`. Use the same hostname throughout the browser session. Deployment callbacks must use your HTTPS hostname. Requested scopes are Gmail readonly/compose, Calendar events and Drive readonly; Drive live integration supplies context rather than document mutation. Provider scope verification and consent restrictions must be validated in your own Google project.
 
@@ -153,7 +169,7 @@ This resets the current demo scenario and writes `docs/benchmark.json`. It recor
 
 ## Deployment and troubleshooting
 
-See [Deployment](docs/DEPLOYMENT.md) for Docker Compose, PostgreSQL, HTTPS, backups, live-mode setup and the release checklist. The public Railway service above is a protected demo; a fully accepted live-account installation remains separate work.
+See [Deployment](docs/DEPLOYMENT.md) for Docker Compose, PostgreSQL, HTTPS, backups, live-mode setup and the release checklist. The separate Railway live service is deployed, but Google owner consent, hosted WhatsApp delivery and full cross-provider acceptance remain open.
 
 | Symptom | Check |
 |---|---|

@@ -22,7 +22,11 @@ def register_privacy(app, db, security, engine, pause_ingestion=None):
         owner = security.require(request)
         async with engine.lock(owner):
             # Explicit allowlist excludes OAuth grants, pending OAuth state and sessions.
-            return {kind: db.list(owner, kind) for kind in ("event", "audit", "settings", "usage")}
+            return {kind: db.list(owner, kind) for kind in (
+                "event", "audit", "settings", "usage", "work_projects", "work_goals",
+                "work_tasks", "work_habits", "work_notes", "habit_checkin", "work_activity",
+                "work_notification_ack",
+            )}
 
     @app.post("/api/privacy/disconnect/google")
     async def disconnect(request: Request):

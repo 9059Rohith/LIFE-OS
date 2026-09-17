@@ -26,10 +26,6 @@ class Providers:
             raise ProviderError("private-channel-must-never-appear", "AUTHORIZATION_ERROR")
         return []
 
-    async def _route_context(self):
-        self.calls.append(("COMPUTE_ROUTE", "maps"))
-        return {"duration_minutes": 10}
-
     async def check_whatsapp(self):
         self.calls.append(("CHECK_CHAT", "whatsapp"))
         return True
@@ -40,19 +36,16 @@ def settings(**overrides):
         mode="live",
         discord_bot_token="configured",
         discord_channel_id="configured",
-        google_maps_api_key="configured",
-        maps_origin="",
-        maps_destination="",
         whatsapp_enabled=False,
         **overrides,
     )
 
 
 @pytest.mark.asyncio
-async def test_missing_route_addresses_are_not_invented_and_checks_never_send():
+async def test_connection_checks_only_read_and_never_send():
     provider = Providers()
     result = await connection_checks(settings(), provider, "owner")
-    assert next(item for item in result if item["id"] == "maps")["status"] == "needs_attention"
+    assert {item["id"] for item in result} == {"gmail", "calendar", "drive", "discord", "whatsapp"}
     assert next(item for item in result if item["id"] == "gmail")["status"] == "read_access_verified"
     assert all(method == "GET" for method, _ in provider.calls)
 
@@ -60,7 +53,7 @@ async def test_missing_route_addresses_are_not_invented_and_checks_never_send():
 @pytest.mark.asyncio
 async def test_provider_exceptions_do_not_leak_and_other_results_survive():
     result = await connection_checks(settings(), Providers(fail=True), "owner")
-    assert len(result) == 6
+    assert len(result) == 5
     assert "private-token" not in str(result)
     assert "private-channel" not in str(result)
     assert next(item for item in result if item["id"] == "gmail")["status"] == "not_connected"
@@ -96,7 +89,6 @@ def test_recent_connection_check_survives_refresh_without_rechecking(tmp_path, m
         calls.append(True)
         return [
             {"id": "whatsapp", "name": "WhatsApp", "status": "read_access_verified", "mode": "live", "description": "Exact chat verified."},
-            {"id": "maps", "name": "Maps", "status": "needs_attention", "mode": "live", "description": "Routes denied."},
         ]
 
     monkeypatch.setattr("lifeos.diagnostics.connection_checks", checked)
@@ -109,7 +101,6 @@ def test_recent_connection_check_survives_refresh_without_rechecking(tmp_path, m
         encryption_key=Fernet.generate_key().decode(),
         whatsapp_enabled=True,
         whatsapp_contact="Family",
-        google_maps_api_key="configured",
     ))
     with TestClient(app) as browser:
         login = browser.post("/api/auth/login", json={"password": "test-workspace-password"})
@@ -120,7 +111,7 @@ def test_recent_connection_check_survives_refresh_without_rechecking(tmp_path, m
         for _ in range(5):
             statuses = {item["id"]: item["status"] for item in browser.get("/api/integrations").json()}
             assert statuses["whatsapp"] == "read_access_verified"
-            assert statuses["maps"] == "needs_attention"
+            assert "maps" not in statuses
         assert calls == [True]
 
 

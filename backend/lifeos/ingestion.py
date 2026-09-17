@@ -168,7 +168,9 @@ class Ingestion:
                             async with self.engine.lock(owner):
                                 if not self.status(owner)["enabled"]:
                                     break
-                                event = await self.engine.plan(owner, content, source, False)
+                                event = await self.engine.plan(
+                                    owner, content, source, False, source_record_id=record_id
+                                )
                             outcome.update(status="planned", event_id=event["id"])
                         except asyncio.CancelledError:
                             # Durable reservation deliberately survives cancellation: no uncertain retry.

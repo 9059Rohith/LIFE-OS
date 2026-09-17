@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright, expect
 
 def main():
     password = dotenv_values(".env").get("LIFEOS_AUTH_PASSWORD", "")
-    result = {"login": "unverified", "integrations": "unverified"}
+    result = {"login": "unverified", "work": "unverified", "integrations": "unverified"}
     try:
         with sync_playwright() as driver:
             browser = driver.chromium.launch(headless=True)
@@ -19,9 +19,11 @@ def main():
             page.get_by_role("button", name="Open workspace").click()
             expect(page.get_by_role("heading", name="Something changed. You’re in control.")).to_be_visible()
             result["login"] = "passed"
+            page.get_by_role("button", name="My work", exact=True).click()
+            expect(page.get_by_role("heading", name="Make progress visible.")).to_be_visible()
+            result["work"] = "passed"
             page.get_by_role("button", name="Integrations", exact=True).click()
             expect(page.get_by_role("heading", name="Your connected world.")).to_be_visible()
-            expect(page.get_by_role("button", name="Connect Google").first).to_be_visible()
             result["integrations"] = "passed"
             browser.close()
     except Exception:

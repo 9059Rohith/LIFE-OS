@@ -34,3 +34,17 @@ def test_live_flight_without_maps_keeps_independent_actions_and_omits_pickup():
     assert result["limitations"]
     assert "pickup" in result["summary"].lower()
     assert all(a["requires_approval"] for a in result["actions"])
+
+
+def test_old_demo_maps_record_is_hidden_and_ignored(client):
+    from lifeos.planning import SCENARIOS
+
+    assert client.post("/api/demo/run", json={"scenario": "flight"}).status_code == 200
+    owner = client.get("/api/session").json()["user"]["id"]
+    client.app.state.db.put(owner, "app", f"{owner}:app:maps", {
+        "application": "maps", "records": [{"id": "old-route", "duration_minutes": 55}],
+    })
+    assert all(app["application"] != "maps" for app in client.get("/api/demo/apps").json())
+    result = client.post("/api/events", json={"text": SCENARIOS["flight"]})
+    assert result.status_code == 200
+    assert all(action["application"] != "maps" for action in result.json()["actions"])

@@ -17,6 +17,7 @@ import {
   Play,
   Plus,
   RotateCcw,
+  SquareCheckBig,
   Settings,
   ShieldCheck,
   X,
@@ -25,6 +26,7 @@ import { api, setCsrf } from "./api";
 import type { Action, LifeEvent, Page, Session } from "./types";
 import { Status, time, AppIcon } from "./components/Common";
 import { Graph } from "./components/Graph";
+import { WorkHub } from "./components/WorkHub";
 import { ApprovalCenter } from "./components/ApprovalCenter";
 import { ActionDialog } from "./components/ActionDialog";
 import { VoiceCommand } from "./components/VoiceCommand";
@@ -44,7 +46,9 @@ export default function App() {
   const [starting, setStarting] = useState(true);
   const onError = useCallback((message: string) => setError(message), []);
   const refreshEvents = useCallback(async () => {
-    setEvents(await api<LifeEvent[]>("/events"));
+    const next = await api<LifeEvent[]>("/events");
+    setEvents(next);
+    setEvent((selected) => next.find((item) => item.id === selected?.id) || next[0] || null);
   }, []);
   async function init() {
     try {
@@ -233,11 +237,20 @@ export default function App() {
   }
   const navigation: [Page, typeof House, string][] = [
     ["overview", House, "Overview"],
+    ["work", SquareCheckBig, "My work"],
     ["integrations", Link2, "Integrations"],
     ["audit", ListChecks, "Audit trail"],
     ["applications", Layers3, session?.mode === "demo" ? "Demo applications" : "Connected apps"],
     ["settings", Settings, "Settings"],
   ];
+  const pageHeading: Record<Page, [string, string]> = {
+    overview: ["Something changed. You’re in control.", "Understand the impact. Approve the next move."],
+    work: ["Your work, connected.", "A clear view of what matters and what happened."],
+    integrations: ["Your connections.", "Review access to the services you choose."],
+    applications: ["Your apps, in context.", "See the source behind each LIFEOS action."],
+    audit: ["Every decision, traceable.", "Follow approvals, attempts and provider receipts."],
+    settings: ["Your workspace, your rules.", "Control preferences, access and local data."],
+  };
   if (starting)
     return (
       <div className="boot-screen">
@@ -378,8 +391,8 @@ export default function App() {
               <Menu size={21} />
             </button>
             <div>
-              <h1>Something changed. You’re in control.</h1>
-              <p>Understand the impact. Approve the next move.</p>
+              <h1>{pageHeading[page][0]}</h1>
+              <p>{pageHeading[page][1]}</p>
             </div>
           </div>
           <div className="header-actions">
@@ -479,7 +492,7 @@ export default function App() {
                     <button onClick={() => void demo("flight")} disabled={busy}>
                       <Plane size={17} />
                       <span>
-                        Flight disruption<small>Gmail → 6 applications</small>
+                        Flight disruption<small>Gmail → connected applications</small>
                       </span>
                       <ArrowUpRight size={15} />
                     </button>
@@ -632,6 +645,8 @@ export default function App() {
               onVoiceExecute={executeVoice}
             />
           </>
+        ) : page === "work" ? (
+          <WorkHub onError={onError} mode={session?.mode || "demo"} />
         ) : (
           <WorkspacePages
             page={page}

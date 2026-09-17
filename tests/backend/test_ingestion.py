@@ -106,7 +106,7 @@ async def test_pause_cancels_plan_before_privacy_delete():
     source.configure("owner", IngestionSettings(enabled=True))
     entered = asyncio.Event()
 
-    async def stalled(*args):
+    async def stalled(*args, **kwargs):
         entered.set()
         await asyncio.Event().wait()
 
@@ -154,6 +154,7 @@ async def test_live_reads_are_bounded_and_untrusted_records_are_skipped():
     await source.scan("owner")
     assert engine.plan.await_count == 1
     assert engine.plan.await_args.args[2] == "gmail"
+    assert engine.plan.await_args.kwargs["source_record_id"] == "live1"
     source.providers._request.assert_awaited_once()
     assert source.providers._request.await_args.args[0] == "GET"
     assert source.providers._request.await_args.kwargs["params"] == {"limit": 20}
@@ -186,6 +187,7 @@ async def test_three_plan_cap_and_real_engine_pending_approval():
     assert len(result["results"]) == 3
     events = source.db.list("owner", "event")
     assert len(events) == 3
+    assert {event["source_ref"]["record_id"] for event in events} == {"0", "1", "2"}
     assert all(
         a["status"] not in {"approved", "executing", "verified"} for event in events for a in event["actions"]
     )

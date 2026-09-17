@@ -16,9 +16,6 @@ os.environ.update(
         "LIFEOS_GOOGLE_CLIENT_SECRET": "",
         "LIFEOS_DISCORD_BOT_TOKEN": "",
         "LIFEOS_DISCORD_CHANNEL_ID": "",
-        "LIFEOS_GOOGLE_MAPS_API_KEY": "",
-        "LIFEOS_MAPS_ORIGIN": "",
-        "LIFEOS_MAPS_DESTINATION": "",
         "LIFEOS_WHATSAPP_ENABLED": "false",
         "LIFEOS_WHATSAPP_CONTACT": "",
     }

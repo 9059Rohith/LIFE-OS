@@ -15,10 +15,6 @@ test("hero workflow reviews exact actions and verifies every local application",
     .click();
   await expect(page.getByRole("dialog")).toContainText("Exact action content");
   await page.getByRole("button", { name: "Close", exact: true }).click();
-  await page.screenshot({
-    path: "../docs/screenshots/overview.png",
-    fullPage: true,
-  });
   await page.getByRole("button", { name: /Approve all/ }).click();
   await page
     .getByRole("button", { name: "Execute approved", exact: true })
@@ -29,10 +25,6 @@ test("hero workflow reviews exact actions and verifies every local application",
   await expect(
     page.getByText("Resolved with read-back verification."),
   ).toBeVisible();
-  await page.screenshot({
-    path: "../docs/screenshots/resolved.png",
-    fullPage: true,
-  });
   await page
     .getByRole("button", { name: "Demo applications", exact: true })
     .click();
@@ -87,10 +79,6 @@ test("injection is blocked and mobile workspace stays usable", async ({
 
   await page.getByRole("button", { name: "Run hero demo" }).click();
   await expect(page.getByRole("button", { name: /Approve all/ })).toBeVisible();
-  await page.screenshot({
-    path: "../docs/screenshots/mobile.png",
-    fullPage: true,
-  });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

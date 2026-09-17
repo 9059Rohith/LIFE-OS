@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 from .providers import ProviderError
+from .profile_lock import ProfileInUse, ProfileLease
 
 
 OUTGOING_RECORDS = """() => {
@@ -41,12 +42,21 @@ class WhatsAppWorker:
         self._playwright = None
         self._context = None
         self._page = None
+        self._profile_lease = None
 
     async def close(self):
-        if self._context:
-            await self._context.close()
-        if self._playwright:
-            await self._playwright.stop()
+        try:
+            if self._context:
+                await self._context.close()
+            if self._playwright:
+                await self._playwright.stop()
+        finally:
+            self._context = None
+            self._playwright = None
+            self._page = None
+            if self._profile_lease:
+                self._profile_lease.release()
+                self._profile_lease = None
 
     @staticmethod
     async def _selected_chat_matches(page, contact: str) -> bool:
@@ -70,18 +80,28 @@ class WhatsAppWorker:
                 raise ProviderError(
                     "Create a dedicated, manually signed-in WhatsApp browser profile", "AUTHENTICATION_ERROR"
                 )
-            self._playwright = await async_playwright().start()
-            self._context = await self._playwright.chromium.launch_persistent_context(
-                str(profile.resolve()),
-                headless=getattr(self.settings, "whatsapp_headless", True),
-                accept_downloads=False,
-            )
-            self._context.set_default_timeout(10000)
-            self._page = self._context.pages[0] if self._context.pages else await self._context.new_page()
-            # WhatsApp Web can keep its document load pending while the signed-in
-            # application is usable. The visible search box below is the actual
-            # readiness check, so navigation only needs to commit.
-            await self._page.goto("https://web.whatsapp.com/", wait_until="commit", timeout=60000)
+            lease = ProfileLease(profile.resolve())
+            try:
+                lease.acquire()
+            except ProfileInUse as exc:
+                raise ProviderError(str(exc), "BROWSER_PROFILE_IN_USE") from exc
+            self._profile_lease = lease
+            try:
+                self._playwright = await async_playwright().start()
+                self._context = await self._playwright.chromium.launch_persistent_context(
+                    str(profile.resolve()),
+                    headless=getattr(self.settings, "whatsapp_headless", True),
+                    accept_downloads=False,
+                )
+                self._context.set_default_timeout(10000)
+                self._page = self._context.pages[0] if self._context.pages else await self._context.new_page()
+                # WhatsApp Web can keep its document load pending while the signed-in
+                # application is usable. The visible search box below is the actual
+                # readiness check, so navigation only needs to commit.
+                await self._page.goto("https://web.whatsapp.com/", wait_until="commit", timeout=60000)
+            except Exception:
+                await self.close()
+                raise
         page = self._page
         if await self._selected_chat_matches(page, contact):
             return page

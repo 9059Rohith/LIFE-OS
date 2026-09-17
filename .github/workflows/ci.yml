@@ -36,13 +36,10 @@ jobs:
         working-directory: frontend
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
-      - name: Start demo API for browser tests
-        run: |
-          LIFEOS_MODE=demo LIFEOS_ENVIRONMENT=test LIFEOS_DATABASE_URL=sqlite:///./data/ci.db \
-            python -m uvicorn lifeos.main:app --host 127.0.0.1 --port 8010 > /tmp/lifeos-ci.log 2>&1 &
-          python scripts/wait_for_api.py --url http://127.0.0.1:8010/ready
       - run: npm run test:e2e
         working-directory: frontend
+      - run: npm ci --ignore-scripts && npm test && npm audit --audit-level=high
+        working-directory: desktop
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -51,16 +48,36 @@ jobs:
             frontend/playwright-report
             frontend/test-results
           if-no-files-found: ignore
-      - name: API logs
-        if: failure()
-        run: cat /tmp/lifeos-ci.log 2>/dev/null || true
       - run: docker build -t lifeos:verified .
       - name: Verify PostgreSQL container workflow
         run: |
           cp .env.example .env
+          sed -i 's/^LIFEOS_MODE=.*/LIFEOS_MODE=demo/' .env
           export POSTGRES_PASSWORD="$(python -c 'import secrets; print(secrets.token_hex(32))')"
           trap 'docker compose -p lifeos-ci down' EXIT
           docker compose -p lifeos-ci up --build -d --wait --wait-timeout 90
           python scripts/benchmark.py --url http://127.0.0.1:8000 --runs 2 --output /tmp/benchmark-postgres.json
       # No publication credentials or automatic deployment. Release procedure:
       # docs/DEPLOYMENT.md. A deployment must consume a successful verify run.
+  desktop-installer:
+    needs: verify
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+        working-directory: desktop
+      - run: npm test
+        working-directory: desktop
+      - run: npm run dist:win
+        working-directory: desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lifeos-windows-companion-unsigned
+          path: artifacts/windows/LIFEOS-Desktop-*.exe
+          if-no-files-found: error

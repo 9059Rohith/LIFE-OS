@@ -218,12 +218,8 @@ async def test_discord_blocks_mentions_and_verifies_content():
 
 
 @pytest.mark.asyncio
-async def test_drive_export_and_maps_use_real_api_contracts():
+async def test_drive_export_uses_real_api_contract():
     def handler(request):
-        if "computeRoutes" in str(request.url):
-            assert request.headers["x-goog-fieldmask"] == "routes.duration,routes.distanceMeters"
-            assert json.loads(request.content)["origin"] == {"address": "Home"}
-            return httpx.Response(200, json={"routes": [{"duration": "3600s", "distanceMeters": 40000}]})
         if request.url.path.endswith("/export"):
             return httpx.Response(200, text="Proposal document")
         return httpx.Response(
@@ -236,17 +232,9 @@ async def test_drive_export_and_maps_use_real_api_contracts():
             },
         )
 
-    provider = client(handler, google_maps_api_key="key")
+    provider = client(handler)
     doc = await provider.drive_read("u", "doc")
     assert doc["text"] == "Proposal document"
-    action = {
-        "_authorized": True,
-        "application": "maps",
-        "type": "route",
-        "arguments": {"origin": "Home", "destination": "Airport"},
-    }
-    result = await provider.execute("u", action, "k")
-    assert (await provider.verify("u", action, result))["verified"]
     await provider.close()
 
 
@@ -321,26 +309,16 @@ async def test_malformed_successful_send_is_uncertain():
 
 
 @pytest.mark.asyncio
-async def test_configured_route_context_uses_actual_routes_response():
+async def test_context_never_calls_removed_routes_api():
     def handler(request):
-        if request.url.host == "routes.googleapis.com":
-            assert json.loads(request.content)["origin"] == {"address": "Configured home"}
-            return httpx.Response(200, json={"routes": [{"duration": "3721s", "distanceMeters": 42000}]})
+        assert request.url.host != "routes.googleapis.com"
         if request.url.path.endswith("/messages"):
             return httpx.Response(200, json=[] if "discord" in request.url.host else {"messages": []})
         return httpx.Response(200, json={"items": [], "files": []})
 
-    provider = client(
-        handler,
-        google_maps_api_key="key",
-        maps_origin="Configured home",
-        maps_destination="Configured airport",
-    )
+    provider = client(handler)
     context = await provider.context("u", "Flight AI-742 tomorrow moved to 06:40")
-    routes = next(c["records"] for c in context if c["application"] == "maps")
-    assert routes[0]["duration_minutes"] == 63
-    assert routes[0]["origin"] == "Configured home"
-    assert routes[0]["source"] == "Google Routes API"
+    assert all(item["application"] != "maps" for item in context)
     await provider.close()
 
 
@@ -365,6 +343,54 @@ async def test_preflight_checks_later_calendar_before_any_write():
     with pytest.raises(ProviderError, match="STALE_APPROVAL"):
         await provider.preflight("u", actions)
     assert calls == ["GET"]
+    await provider.close()
+
+
+@pytest.mark.asyncio
+async def test_whatsapp_context_requires_real_chat_check_and_preflight_rechecks():
+    async def no_google(*_args):
+        return None
+
+    async def no_save(*_args):
+        pass
+
+    settings = SimpleNamespace(
+        mode="live", discord_channel_id="", discord_bot_token="",
+        whatsapp_enabled=True, whatsapp_contact="Family",
+    )
+    provider = LiveProviders(settings, no_google, no_save)
+    calls = []
+
+    async def check():
+        calls.append("checked")
+        return True
+
+    provider.check_whatsapp = check
+    context = await provider.context("u", "Flight AI-742 on 2026-09-15 moved to 6:40 AM")
+    chat = next(item for item in context if item["application"] == "whatsapp")
+    assert chat["records"] == [{
+        "application": "whatsapp", "id": "Family", "title": "Verified WhatsApp conversation",
+        "detail": "The configured chat and composer were verified in a signed-in browser session.",
+        "contact": "Family", "verified": True,
+    }]
+    await provider.preflight("u", [{
+        "application": "whatsapp", "type": "send",
+        "arguments": {"contact": "Family", "body": "Flight changed"},
+    }])
+    assert calls == ["checked", "checked"]
+    with pytest.raises(ProviderError, match="allowlisted"):
+        await provider.preflight("u", [{
+            "application": "whatsapp", "type": "send",
+            "arguments": {"contact": "Another chat", "body": "Flight changed"},
+        }])
+
+    async def unavailable():
+        raise ProviderError("Sign in required", "AUTHENTICATION_ERROR")
+
+    provider.check_whatsapp = unavailable
+    context = await provider.context("u", "Flight AI-742 on 2026-09-15 moved to 6:40 AM")
+    chat = next(item for item in context if item["application"] == "whatsapp")
+    assert chat["records"] == [] and "Sign in required" in chat["errors"]
     await provider.close()
 
 
@@ -417,9 +443,9 @@ async def test_gmail_attachment_readback_compares_content_hash():
 
 
 @pytest.mark.asyncio
-async def test_route_growth_blocks_frozen_departure_plan():
-    provider = client(lambda r: pytest.fail("verification uses returned computation"))
-    action = {"application": "maps", "arguments": {"duration_minutes": 55}}
-    result = {"routes": [{"duration": "4200s", "distanceMeters": 42000}]}
-    assert not (await provider.verify("u", action, result))["verified"]
+async def test_removed_route_action_cannot_execute():
+    provider = client(lambda r: pytest.fail("removed action must not call any provider"))
+    action = {"_authorized": True, "application": "maps", "type": "route", "arguments": {}}
+    with pytest.raises(ProviderError):
+        await provider.execute("u", action, "k")
     await provider.close()

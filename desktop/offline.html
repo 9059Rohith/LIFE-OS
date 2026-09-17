@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'" />
+  <title>LIFEOS · Connect local workspace</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f4f8f2; color: #23402e; font: 14px/1.6 system-ui, sans-serif; }
+    main { width: min(520px, 100%); padding: 40px; border: 1px solid #dfe8dc; border-radius: 20px; background: white; box-shadow: 0 16px 50px #193c3012; }
+    .mark { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #193c30; color: #eaf0df; font-size: 23px; font-weight: 800; }
+    h1 { margin: 23px 0 8px; font-size: 28px; letter-spacing: -.04em; line-height: 1.18; }
+    p { margin: 0; color: #6d8071; }
+    .step { margin-top: 24px; padding: 15px 17px; border-radius: 10px; background: #f4f8f2; }
+    .step strong { display: block; margin-bottom: 4px; }
+    code { color: #285b3d; font-size: 12px; overflow-wrap: anywhere; }
+    small { display: block; margin-top: 24px; color: #849586; }
+  </style>
+</head>
+<body><main>
+  <div class="mark" aria-hidden="true">L</div>
+  <h1>Connect your local LIFEOS workspace.</h1>
+  <p>The desktop window is ready. Start the LIFEOS backend on this computer to load your account, approvals, and connected services.</p>
+  <div class="step"><strong>From the LIFEOS project directory</strong><code>python -m uvicorn lifeos.main:app --app-dir backend --host 127.0.0.1 --port 8010</code></div>
+  <small>This window checks the connection automatically and opens your workspace when the service is ready. Discord and WhatsApp sessions stay separate inside the desktop app.</small>
+</main></body>
+</html>

@@ -38,6 +38,9 @@ def test_recipient_tampering_and_unknown_fields(client):
         client.post("/api/events", json={"text": "My flight moved to 8 AM", "approved": True}).status_code
         == 422
     )
+    assert client.post(
+        "/api/events", json={"text": "Flight AI-742 tomorrow moved to 8 AM", "source": "gmail"}
+    ).status_code == 422
     assert (
         client.post(
             "/api/events",
@@ -185,19 +188,19 @@ def test_migration_idempotent(tmp_path):
     db = Database(f"sqlite:///{tmp_path}/nested/migrate.db")
     db.migrate()
     with db.engine.connect() as connection:
-        assert connection.execute(text("SELECT version FROM schema_revision")).scalar() == 1
+        assert connection.execute(text("SELECT version FROM schema_revision")).scalar() == 2
 
 
 def test_individual_approval_executes_only_selected(client):
     event = plan(client)
-    pickup = next(a for a in event["actions"] if a["application"] == "whatsapp")
+    selected = next(a for a in event["actions"] if a["application"] == "calendar")
     response = client.post(
-        f"/api/events/{event['id']}/approve", json={"version": event["version"], "action_ids": [pickup["id"]]}
+        f"/api/events/{event['id']}/approve", json={"version": event["version"], "action_ids": [selected["id"]]}
     )
     assert response.status_code == 200
     event = client.post(f"/api/events/{event['id']}/execute").json()
     assert event["status"] == "awaiting_approval"
-    assert next(a for a in event["actions"] if a["application"] == "whatsapp")["status"] == "verified"
+    assert next(a for a in event["actions"] if a["application"] == "calendar")["status"] == "verified"
     assert next(a for a in event["actions"] if a["application"] == "gmail")["status"] == "awaiting_approval"
     assert approve(client, event).status_code == 200
     assert client.post(f"/api/events/{event['id']}/execute").json()["status"] == "resolved"
@@ -276,6 +279,6 @@ def test_execution_summary_reports_outcome(client):
     assert "AI-742" in event["title"]
     approve(client, event)
     event = client.post(f"/api/events/{event['id']}/execute").json()
-    assert "6 actions verified" in event["summary"]
+    assert "4 actions verified" in event["summary"]
     undone = client.post(f"/api/events/{event['id']}/undo").json()
     assert "Sent messages remain delivered" in undone["summary"]

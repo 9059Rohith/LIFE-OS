@@ -10,7 +10,7 @@ class Strict(BaseModel):
 class EventInput(Strict):
     text: str = Field(min_length=3, max_length=12000)
     simulation: bool = False
-    source: Literal["text", "voice", "upload", "gmail", "discord", "whatsapp"] = "text"
+    source: Literal["text", "voice", "upload"] = "text"
 
 
 class DemoInput(Strict):
@@ -31,7 +31,7 @@ class LoginInput(Strict):
 
 
 class Preferences(Strict):
-    name: str = Field(default="Alex Morgan", min_length=1, max_length=80)
+    name: str = Field(default="Your workspace", min_length=1, max_length=80)
     timezone: str = "Asia/Kolkata"
     retention_days: int = Field(default=30, ge=1, le=365)
 

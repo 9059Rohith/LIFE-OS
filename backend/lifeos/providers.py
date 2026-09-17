@@ -4,7 +4,6 @@ import asyncio
 import base64
 import copy
 import hashlib
-import math
 import re
 import time
 from datetime import UTC, datetime, timedelta
@@ -116,7 +115,7 @@ class LiveProviders:
         return {"Authorization": "Bot " + self.settings.discord_bot_token}
 
     async def _request(self, method, url, **kwargs):
-        mutation = method not in {"GET", "HEAD"} and "computeRoutes" not in url
+        mutation = method not in {"GET", "HEAD"}
         async with self._limit:
             for attempt in range(3 if not mutation else 1):
                 try:
@@ -288,46 +287,6 @@ class LiveProviders:
             return [await self.drive_read(user_id, candidates[0]["id"])]
         return candidates
 
-    async def route(self, origin, destination):
-        key = getattr(self.settings, "google_maps_api_key", "")
-        if not key:
-            raise ProviderError("Configure Google Maps Routes API key", "AUTHENTICATION_ERROR")
-        if not origin or not destination:
-            raise ProviderError("Route requires origin and destination", "VALIDATION_ERROR")
-        return await self._request(
-            "POST",
-            "https://routes.googleapis.com/directions/v2:computeRoutes",
-            headers={"X-Goog-Api-Key": key, "X-Goog-FieldMask": "routes.duration,routes.distanceMeters"},
-            json={
-                "origin": {"address": origin},
-                "destination": {"address": destination},
-                "travelMode": "DRIVE",
-                "routingPreference": "TRAFFIC_AWARE",
-            },
-        )
-
-    async def _route_context(self):
-        origin, destination = self.settings.maps_origin, self.settings.maps_destination
-        result = await self.route(origin, destination)
-        routes = result.get("routes", [])
-        if not routes or not re.fullmatch(r"\d+(?:\.\d+)?s", routes[0].get("duration", "")):
-            raise ProviderError("Maps returned no usable route duration", "VERIFICATION_ERROR")
-        duration = math.ceil(float(routes[0]["duration"][:-1]) / 60)
-        if duration <= 0:
-            raise ProviderError("Maps returned an invalid route duration", "VERIFICATION_ERROR")
-        return [
-            {
-                "id": "configured-airport-route",
-                "name": "Airport travel route",
-                "origin": origin,
-                "destination": destination,
-                "duration_minutes": duration,
-                "distance_km": routes[0].get("distanceMeters", 0) / 1000,
-                "source": "Google Routes API",
-                "observed_at": datetime.now(UTC).isoformat(),
-            }
-        ]
-
     async def preflight(self, user_id, actions):
         """Read all preconditions before the engine starts its first mutation."""
         for action in actions:
@@ -360,6 +319,10 @@ class LiveProviders:
                     raise ProviderError(
                         "STALE_APPROVAL: proposal changed before execution", "STALE_APPROVAL_ERROR"
                     )
+            if action["application"] == "whatsapp" and action["type"] == "send":
+                if args.get("contact") != getattr(self.settings, "whatsapp_contact", ""):
+                    raise ProviderError("WhatsApp contact is not allowlisted", "AUTHORIZATION_ERROR")
+                await self.check_whatsapp()
 
     async def context(self, user_id, text, entities=None, timezone="UTC"):
         tasks = []
@@ -409,13 +372,6 @@ class LiveProviders:
                 self._drive_context(user_id),
             ]
             names += ["gmail", "calendar", "drive"]
-        if (
-            getattr(self.settings, "google_maps_api_key", "")
-            and getattr(self.settings, "maps_origin", "")
-            and getattr(self.settings, "maps_destination", "")
-        ):
-            tasks.append(self._route_context())
-            names.append("maps")
         if getattr(self.settings, "discord_bot_token", "") and getattr(
             self.settings, "discord_channel_id", ""
         ):
@@ -428,6 +384,11 @@ class LiveProviders:
                 )
             )
             names.append("discord")
+        if getattr(self.settings, "whatsapp_enabled", False) and getattr(
+            self.settings, "whatsapp_contact", ""
+        ):
+            tasks.append(asyncio.wait_for(self.check_whatsapp(), 18))
+            names.append("whatsapp")
         results = await asyncio.gather(*tasks, return_exceptions=True)
         context = []
         for application, records in zip(names, results, strict=True):
@@ -440,6 +401,19 @@ class LiveProviders:
                         "error": True,
                     }
                 )
+                continue
+            if application == "whatsapp":
+                if records is True:
+                    context.append(
+                        {
+                            "application": "whatsapp",
+                            "id": self.settings.whatsapp_contact,
+                            "title": "Verified WhatsApp conversation",
+                            "detail": "The configured chat and composer were verified in a signed-in browser session.",
+                            "contact": self.settings.whatsapp_contact,
+                            "verified": True,
+                        }
+                    )
                 continue
             for record in records:
                 headers = {
@@ -476,8 +450,6 @@ class LiveProviders:
                     normalized["thread_id"] = record.get("threadId")
                 if application == "discord":
                     normalized["channel_id"] = self.settings.discord_channel_id
-                if application == "maps":
-                    normalized.update(record)
                 if application == "drive":
                     normalized.update(
                         {
@@ -498,17 +470,6 @@ class LiveProviders:
                     "detail": f"Retrieved {sum(not r.get('error') for r in rows)} records",
                     "records": [r for r in rows if not r.get("error")],
                     "errors": [r["detail"] for r in rows if r.get("error")],
-                }
-            )
-        if getattr(self.settings, "whatsapp_enabled", False) and getattr(
-            self.settings, "whatsapp_contact", ""
-        ):
-            grouped.append(
-                {
-                    "application": "whatsapp",
-                    "title": "Configured pickup conversation",
-                    "detail": "Operator-configured contact; browser session has not been verified",
-                    "records": [{"id": "configured-contact", "contact": self.settings.whatsapp_contact}],
                 }
             )
         return grouped
@@ -582,8 +543,6 @@ class LiveProviders:
             return {**result, "channel_id": channel}
         if application == "drive" and kind == "read":
             return await self.drive_read(user_id, args.get("file_id"))
-        if application == "maps" and kind == "route":
-            return await self.route(args.get("origin"), args.get("destination"))
         if application == "whatsapp" and kind == "send":
             from .whatsapp import WhatsAppWorker
 
@@ -794,21 +753,6 @@ class LiveProviders:
         elif application == "drive":
             current = await self.drive_read(user_id, args.get("file_id"))
             matches = current.get("id") == result.get("id") and current.get("text") == result.get("text")
-        elif application == "maps":
-            matches = bool(result.get("routes")) and all(
-                "duration" in r and "distanceMeters" in r for r in result["routes"]
-            )
-            if matches and args.get("duration_minutes"):
-                duration = result["routes"][0].get("duration", "")
-                matches = (
-                    bool(re.fullmatch(r"\d+(?:\.\d+)?s", duration))
-                    and math.ceil(float(duration[:-1]) / 60) <= args["duration_minutes"]
-                )
-                if not matches:
-                    return {
-                        "verified": False,
-                        "detail": "Route travel time exceeds the approved departure budget; re-plan before notifying anyone",
-                    }
         else:
             matches = False
         return {

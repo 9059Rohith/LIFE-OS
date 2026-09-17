@@ -4,7 +4,6 @@ import {
   MessageCircle,
   MessagesSquare,
   FileText,
-  MapPin,
   Plane,
   Check,
   Clock3,
@@ -18,7 +17,6 @@ export const appNames: Record<AppName, string> = {
   whatsapp: "WhatsApp",
   discord: "Discord",
   drive: "Drive",
-  maps: "Maps",
 };
 const icons = {
   gmail: Mail,
@@ -26,7 +24,6 @@ const icons = {
   whatsapp: MessageCircle,
   discord: MessagesSquare,
   drive: FileText,
-  maps: MapPin,
 };
 export function AppIcon({ name, size = 19 }: { name: string; size?: number }) {
   const Icon = icons[name as AppName] || Plane;
