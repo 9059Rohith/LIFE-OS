@@ -78,7 +78,7 @@ function actionState(action: Action) {
 
 function DesktopApp() {
   const bridge = window.lifeosDesktop;
-  const [selected, setSelected] = useState<DesktopProvider>("discord");
+  const [selected, setSelected] = useState<DesktopProvider>("lifeos");
   const [statuses, setStatuses] = useState<Record<DesktopProvider, ProviderStatus>>({
     discord: { name: "discord", state: "idle", detail: "" },
     whatsapp: { name: "whatsapp", state: "idle", detail: "" },
@@ -127,7 +127,7 @@ function DesktopApp() {
     const unsubscribe = bridge.onStatus((next) => {
       setStatuses((previous) => ({ ...previous, [next.name]: next }));
     });
-    bridge.select("discord");
+    bridge.select("lifeos");
     void load();
     return unsubscribe;
   }, [bridge, load]);

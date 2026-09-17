@@ -1,6 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
-const { isAllowedNavigation, isExternalGoogleAuthorization } = require("../navigation.cjs");
+const { hostedWorkspaceOrigin, workspaceAddress, isAllowedNavigation, isExternalGoogleAuthorization } = require("../navigation.cjs");
 
 const shellOrigin = "http://127.0.0.1:8010";
 const providers = {
@@ -27,4 +27,14 @@ test("provider views cannot navigate into LIFEOS or another provider", () => {
   assert.equal(allowed("whatsapp", "https://discord.com/app"), false);
   assert.equal(allowed("whatsapp", "javascript:alert(1)"), false);
   assert.equal(allowed("unknown", "https://discord.com/app"), false);
+});
+
+test("desktop opens only the trusted hosted workspace or local development server", () => {
+  assert.equal(workspaceAddress(hostedWorkspaceOrigin + "/desktop.html").origin, hostedWorkspaceOrigin);
+  assert.equal(workspaceAddress(shellOrigin + "/desktop.html").origin, shellOrigin);
+  assert.throws(() => workspaceAddress("https://lifeos-live-production.up.railway.app.evil.example/desktop.html"));
+  assert.throws(() => workspaceAddress("http://lifeos-live-production.up.railway.app/desktop.html"));
+  assert.throws(() => workspaceAddress("https://example.com/desktop.html"));
+  assert.throws(() => workspaceAddress(hostedWorkspaceOrigin + "/desktop.html?next=https://example.com"));
+  assert.throws(() => workspaceAddress("file:///tmp/desktop.html"));
 });

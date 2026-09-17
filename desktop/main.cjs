@@ -1,13 +1,10 @@
 const path = require("node:path");
 const { app, BaseWindow, WebContentsView, ipcMain, session, shell: systemShell } = require("electron");
-const { isAllowedNavigation, isExternalGoogleAuthorization } = require("./navigation.cjs");
+const { hostedWorkspaceOrigin, workspaceAddress, isAllowedNavigation, isExternalGoogleAuthorization } = require("./navigation.cjs");
 
 app.enableSandbox();
 
-const shellUrl = new URL(process.env.LIFEOS_DESKTOP_URL || "http://127.0.0.1:8010/desktop.html");
-if (!(["127.0.0.1", "localhost"].includes(shellUrl.hostname) && shellUrl.protocol === "http:")) {
-  throw new Error("The LIFEOS desktop shell must be served from a local loopback address.");
-}
+const shellUrl = workspaceAddress(process.env.LIFEOS_DESKTOP_URL || `${hostedWorkspaceOrigin}/desktop.html`);
 const workspaceUrl = new URL("/", shellUrl);
 const providers = Object.freeze({
   discord: { url: "https://discord.com/app", origin: "https://discord.com", partition: "persist:lifeos-discord" },
@@ -168,7 +165,8 @@ app.whenReady().then(() => {
   connectionTimer = setInterval(async () => {
     if (!offline || shellLoading) return;
     try {
-      const response = await fetch(new URL("/health", shellUrl), { signal: AbortSignal.timeout(2000) });
+      const timeout = shellUrl.protocol === "https:" ? 10000 : 2000;
+      const response = await fetch(new URL("/health", shellUrl), { signal: AbortSignal.timeout(timeout) });
       if (response.ok) await loadShell();
     } catch { /* The offline screen stays visible until the backend is ready. */ }
   }, 5000);

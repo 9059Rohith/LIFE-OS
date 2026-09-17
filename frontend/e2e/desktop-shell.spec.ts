@@ -38,6 +38,7 @@ test("desktop dock separates an uncertain send from a verified receipt", async (
   const calls = await page.evaluate(() => (window as typeof window & { __lifeosCalls: {
     selected: string[]; viewport?: { width: number; height: number };
   } }).__lifeosCalls);
+  expect(calls.selected[0]).toBe("lifeos");
   expect(calls.selected).toContain("whatsapp");
   expect(calls.viewport?.width).toBeGreaterThan(300);
   expect(calls.viewport?.height).toBeGreaterThan(180);

@@ -1,3 +1,17 @@
+const hostedWorkspaceOrigin = "https://lifeos-live-production.up.railway.app";
+
+function workspaceAddress(value) {
+  const parsed = new URL(value);
+  if (parsed.pathname !== "/desktop.html" || parsed.search || parsed.hash) {
+    throw new Error("The LIFEOS desktop URL must point to /desktop.html without query parameters.");
+  }
+  const local = parsed.protocol === "http:" && ["127.0.0.1", "localhost"].includes(parsed.hostname);
+  if (!local && parsed.origin !== hostedWorkspaceOrigin) {
+    throw new Error("The LIFEOS desktop URL must use the trusted hosted workspace or local loopback.");
+  }
+  return parsed;
+}
+
 function isAllowedNavigation(name, url, shellOrigin, providers) {
   try {
     const origin = new URL(url).origin;
@@ -18,4 +32,4 @@ function isExternalGoogleAuthorization(url) {
   }
 }
 
-module.exports = { isAllowedNavigation, isExternalGoogleAuthorization };
+module.exports = { hostedWorkspaceOrigin, workspaceAddress, isAllowedNavigation, isExternalGoogleAuthorization };

@@ -99,7 +99,7 @@ npm --prefix desktop ci
 npm --prefix desktop start
 ```
 
-The center of this window is the real Discord or WhatsApp Web page in an isolated persistent Electron session. Sign in to each site inside its own view; LIFEOS never copies those provider credentials into the backend. The right dock reads real LIFEOS events and lets the owner review and approve actions. A page-load badge only reports that the site rendered; it does not claim that its account is connected. An unsigned Windows companion installer can be built with `npm --prefix desktop run dist:win`; it still needs the local backend. The backend's approved WhatsApp worker currently uses a separate browser profile, so the visible WhatsApp session is not yet the sender for approved actions.
+The center of this window is the real LIFEOS, Discord, or WhatsApp Web page in an isolated persistent Electron session. Sign in to each site inside its own view; LIFEOS never copies provider website credentials into the backend. The right dock reads real LIFEOS events and lets the owner review and approve actions. A page-load badge only reports that the site rendered; it does not claim that its account is connected. The unsigned Windows companion installer built with `npm --prefix desktop run dist:win` opens the trusted hosted LIFEOS workspace by default; set `LIFEOS_DESKTOP_URL=http://127.0.0.1:8010/desktop.html` to use a local backend. The backend's approved WhatsApp worker currently uses a separate browser profile, so the visible WhatsApp session is not yet the sender for approved actions.
 
 ## Isolated legacy demo
 
