@@ -2,10 +2,16 @@ import asyncio
 import copy
 import hashlib
 import time
+from datetime import datetime
+from urllib.parse import quote
+from zoneinfo import ZoneInfo
 from fastapi import HTTPException
 from .store import uid, digest
-from .planning import APPS, extract, make_plan, now_iso, seed
+from .planning import APPS, calendar_time, extract, make_plan, make_reschedule_plan, now_iso, seed
 from .policy import approval_valid, classify
+
+
+GOOGLE = "https://www.googleapis.com"
 
 
 class Engine:
@@ -143,6 +149,102 @@ class Engine:
             event["summary"],
             latency_ms=round((time.perf_counter() - started) * 1000, 2),
         )
+        return self.save(owner, event)
+
+    @staticmethod
+    def _reschedule_time(value, timezone):
+        if isinstance(value, str):
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if not isinstance(value, datetime) or value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("New Calendar times must be ISO-8601 values with a timezone offset")
+        try:
+            return value.astimezone(ZoneInfo(timezone))
+        except Exception as exc:
+            raise ValueError("Calendar timezone is invalid") from exc
+
+    @staticmethod
+    def _busy_overlap(record, start, end, timezone):
+        if record.get("status") == "cancelled" or record.get("transparency") == "transparent":
+            return False
+        try:
+            busy_start, busy_end = calendar_time(record, "start"), calendar_time(record, "end")
+        except (KeyError, TypeError, ValueError):
+            # All-day events reserve time as well. Incomplete events fail closed.
+            try:
+                zone = ZoneInfo(timezone)
+                busy_start = datetime.fromisoformat(record["start"]["date"]).replace(tzinfo=zone)
+                busy_end = datetime.fromisoformat(record["end"]["date"]).replace(tzinfo=zone)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("Calendar availability cannot be verified from an incomplete event") from exc
+        if busy_end <= busy_start:
+            raise ValueError("Calendar availability cannot be verified from an invalid event")
+        return start < busy_end and end > busy_start
+
+    async def plan_reschedule(
+        self,
+        owner,
+        event_id,
+        new_start,
+        new_end,
+        timezone,
+        notify_discord=False,
+        notify_whatsapp=False,
+        expected_etag=None,
+    ):
+        """Create an approval-only plan for one exact, owner-readable Calendar event.
+
+        This method issues bounded GET requests only. Provider mutations remain in
+        ``execute`` after the usual approval and Calendar preflight checks.
+        """
+        if self.settings.mode != "live" or self.providers is None:
+            raise ValueError("Calendar reschedule planning requires a connected live provider")
+        if not isinstance(owner, str) or not owner:
+            raise ValueError("Authenticated owner is required")
+        if not isinstance(event_id, str) or not event_id or len(event_id) > 512:
+            raise ValueError("A valid Calendar event ID is required")
+        if expected_etag is not None and (not isinstance(expected_etag, str) or not expected_etag):
+            raise ValueError("Expected Calendar etag must be a non-empty string")
+        start = self._reschedule_time(new_start, timezone)
+        end = self._reschedule_time(new_end, timezone)
+        if end <= start:
+            raise ValueError("New Calendar end must be after start")
+        encoded_id = quote(event_id, safe="")
+        base = GOOGLE + "/calendar/v3/calendars/primary/events"
+        current = await self.providers._google(owner, "GET", base + "/" + encoded_id)
+        if current.get("id") != event_id:
+            raise ValueError("Calendar returned an unexpected event")
+        if expected_etag is not None and current.get("etag") != expected_etag:
+            raise ValueError("Calendar event etag changed; fetch it again before planning")
+        # Restrict the availability read to exactly the requested interval.
+        busy = await self.providers._google(
+            owner,
+            "GET",
+            base,
+            params={
+                "timeMin": start.isoformat(),
+                "timeMax": end.isoformat(),
+                "singleEvents": "true",
+                "orderBy": "startTime",
+                "maxResults": 2500,
+            },
+        )
+        if busy.get("nextPageToken"):
+            raise ValueError("Calendar availability exceeds the safe retrieval limit")
+        for record in busy.get("items", []):
+            if record.get("id") != event_id and self._busy_overlap(record, start, end, timezone):
+                raise ValueError("Requested Calendar time overlaps another busy event")
+        event = make_reschedule_plan(
+            current,
+            start,
+            end,
+            timezone,
+            self.settings,
+            notify_discord=bool(notify_discord),
+            notify_whatsapp=bool(notify_whatsapp),
+        )
+        self.log(owner, event, "detected", "Explicit Calendar reschedule request received", "calendar")
+        self.log(owner, event, "context", "Exact owner Calendar event and requested availability were read", "calendar")
+        self.log(owner, event, "planned", event["summary"], latency_ms=None)
         return self.save(owner, event)
 
     def approve(self, owner, event, ids, version):

@@ -533,3 +533,134 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
         + (" " + " ".join(event["limitations"]) if event.get("limitations") else "")
     )
     return event
+
+
+def make_reschedule_plan(
+    calendar_event,
+    new_start,
+    new_end,
+    timezone,
+    settings,
+    notify_discord=False,
+    notify_whatsapp=False,
+):
+    """Build an approval-only plan from one provider-read Calendar event.
+
+    This deliberately accepts the target event itself, rather than selecting one
+    from free-form context. The caller owns fetching it with the authenticated
+    owner's Google grant and checking availability before invoking this helper.
+    """
+    zone = ZoneInfo(timezone)
+    try:
+        current_start = calendar_time(calendar_event, "start")
+        current_end = calendar_time(calendar_event, "end")
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("Calendar event must have timezone-aware start and end times") from exc
+    if not calendar_event.get("id") or not calendar_event.get("etag"):
+        raise ValueError("Calendar event ID and etag are required")
+    if calendar_event.get("status") == "cancelled":
+        raise ValueError("Cancelled Calendar events cannot be rescheduled")
+    duration = current_end - current_start
+    if not timedelta(0) < duration <= timedelta(days=1):
+        raise ValueError("Calendar event duration must be between zero and 24 hours")
+    if not new_start.tzinfo or not new_end.tzinfo:
+        raise ValueError("New Calendar times must include a timezone offset")
+    if new_start.astimezone(zone).utcoffset() is None or new_end.astimezone(zone).utcoffset() is None:
+        raise ValueError("New Calendar times must be valid in the selected timezone")
+    if new_end - new_start != duration:
+        raise ValueError("Rescheduling must preserve the existing Calendar event duration")
+
+    title = calendar_event.get("summary") or "Calendar event"
+    event = {
+        "id": uid(),
+        "title": f"Reschedule {title}",
+        "event_type": "calendar_reschedule",
+        "source": "calendar",
+        "status": "awaiting_approval",
+        "created_at": now_iso(),
+        "version": 1,
+        "summary": "",
+        "simulation": False,
+        "entities": {
+            "calendar_event_id": calendar_event["id"],
+            "calendar_etag": calendar_event["etag"],
+            "timezone": timezone,
+            "previous_start": current_start.isoformat(),
+            "previous_end": current_end.isoformat(),
+        },
+        "actions": [],
+        "context": [
+            {
+                "application": "calendar",
+                "detail": "Exact owner Calendar event read before planning.",
+                "records": [{"id": calendar_event["id"], "etag": calendar_event["etag"]}],
+            }
+        ],
+        "timeline": [],
+        "input": "Explicit Calendar reschedule request",
+    }
+
+    def add(application, action_type, action_title, reason, arguments, dependencies=None):
+        policy = classify(application, action_type)
+        action = {
+            "id": uid(),
+            "application": application,
+            "type": action_type,
+            "title": action_title,
+            "reason": reason,
+            "target": arguments.get("event_id") or arguments.get("channel_id") or arguments.get("contact", ""),
+            "arguments": arguments,
+            "risk": policy.risk.value,
+            "status": "awaiting_approval",
+            "requires_approval": policy.requires_approval,
+            "reversible": application == "calendar",
+            "dependencies": dependencies or [],
+            "evidence": None,
+            "error": None,
+        }
+        action["arguments_hash"] = digest(arguments)
+        event["actions"].append(action)
+        return action["id"]
+
+    calendar_action_id = add(
+        "calendar",
+        "update",
+        f"Move {title}",
+        "The requested time and the current provider event were checked before creating this plan.",
+        {
+            "calendar_id": "primary",
+            "event_id": calendar_event["id"],
+            "etag": calendar_event["etag"],
+            "start": new_start.isoformat(),
+            "end": new_end.isoformat(),
+            "summary": title,
+        },
+    )
+    message = f"{title} is planned for {new_start.astimezone(zone):%d %b, %H:%M %Z}."
+    if notify_discord and getattr(settings, "discord_bot_token", "") and getattr(settings, "discord_channel_id", ""):
+        add(
+            "discord",
+            "send",
+            "Notify the configured Discord channel",
+            "The configured channel will be notified only after Calendar read-back verifies the update.",
+            {"channel_id": settings.discord_channel_id, "body": message},
+            [calendar_action_id],
+        )
+    whatsapp_ready = (
+        (getattr(settings, "whatsapp_enabled", False) or getattr(settings, "whatsapp_bridge_enabled", False))
+        and bool(getattr(settings, "whatsapp_contact", ""))
+    )
+    if notify_whatsapp and whatsapp_ready:
+        add(
+            "whatsapp",
+            "send",
+            "Notify the configured WhatsApp contact",
+            "The configured contact will be notified only after Calendar read-back verifies the update.",
+            {"contact": settings.whatsapp_contact, "body": message},
+            [calendar_action_id],
+        )
+    event["summary"] = (
+        f"Prepared {len(event['actions'])} approval-required action(s) for the exact Calendar event. "
+        "Calendar verification is required before configured notifications can send."
+    )
+    return event
