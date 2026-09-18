@@ -37,8 +37,11 @@ async function inWhatsAppPage(job) {
   const outgoing = () => {
     const records = new Map();
     for (const node of document.querySelectorAll("#main .message-out[data-id]")) {
+      const textNode = node.querySelector('[data-testid="selectable-text"]');
+      const text = (textNode?.innerText || textNode?.textContent || "").trim();
+      if (!text) continue;
       records.set(node.getAttribute("data-id"), {
-        id: node.getAttribute("data-id"), text: node.innerText,
+        id: node.getAttribute("data-id"), text,
         sent: !!node.querySelector('[data-icon="msg-check"], [data-icon="msg-dblcheck"]'),
         pending: !!node.querySelector('[data-icon="msg-time"]'),
       });
@@ -47,11 +50,13 @@ async function inWhatsAppPage(job) {
       if (!message.querySelector('[data-icon="tail-out"]')) continue;
       const node = message.closest("[data-id]");
       const id = node?.getAttribute("data-id");
-      const text = message.querySelector('[data-testid="selectable-text"]')?.textContent;
+      const textNode = message.querySelector('[data-testid="selectable-text"]');
+      const text = textNode?.innerText || textNode?.textContent;
       if (!id || !text) continue;
       const label = (node.querySelector('[data-testid="msg-meta"] [aria-label]')?.getAttribute("aria-label") || "").trim().toLowerCase();
-      records.set(id, { id, text, sent: ["sent", "delivered", "read"].includes(label),
-        pending: ["pending", "sending", "waiting"].includes(label) });
+      const previous = records.get(id);
+      records.set(id, { id, text: text.trim(), sent: previous?.sent || ["sent", "delivered", "read"].includes(label),
+        pending: previous?.pending || ["pending", "sending", "waiting"].includes(label) });
     }
     return [...records.values()];
   };
@@ -106,14 +111,16 @@ async function inWhatsAppPage(job) {
     return { ok: true, result: { application: "whatsapp", title: contact, items } };
   }
   if (operation === "verify") {
-    const matches = outgoing().filter((item) => item.id === payload.id && item.text.includes(payload.body) && item.sent && !item.pending);
-    return { ok: true, result: { verified: matches.length === 1, provider_id: payload.id } };
+    if (typeof payload.id !== "string" || typeof payload.body !== "string") return fail("VERIFICATION_ERROR");
+    const confirmed = await waitFor(() => outgoing().some((item) =>
+      item.id === payload.id && item.text === payload.body && item.sent && !item.pending), 8000);
+    return { ok: true, result: { verified: !!confirmed, provider_id: payload.id } };
   }
   if (operation === "confirm_send") {
     if (!Array.isArray(payload.before) || typeof payload.body !== "string") return fail("VERIFICATION_ERROR", true);
     const before = new Set(payload.before);
     const match = await waitFor(() => {
-      const matches = outgoing().filter((item) => !before.has(item.id) && item.text.includes(payload.body));
+      const matches = outgoing().filter((item) => !before.has(item.id) && item.text === payload.body);
       return matches.length === 1 ? matches[0] : null;
     }, 12000);
     if (!match) return fail("VERIFICATION_ERROR", true);
