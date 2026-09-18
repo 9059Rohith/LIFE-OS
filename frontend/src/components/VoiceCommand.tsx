@@ -96,13 +96,59 @@ export function VoiceCommand({
       const mime = MediaRecorder.isTypeSupported("audio/webm")
         ? "audio/webm"
         : "audio/mp4";
-      const rec = new MediaRecorder(media, { mimeType: mime });
+      const rec = new MediaRecorder(media, { mimeType: mime, videoBitsPerSecond: undefined, bitsPerSecond: undefined, audioBitsPerSecond: 128000 });
       recorder.current = rec;
+      
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/api/voice/stream`;
+      const ws = new WebSocket(wsUrl);
+      let isWsOpen = false;
+      
+      ws.onopen = () => { isWsOpen = true; };
+      
       rec.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
+        if (e.data.size) {
+          chunks.push(e.data);
+          if (isWsOpen && ws.readyState === WebSocket.OPEN) {
+            ws.send(e.data);
+          }
+        }
       };
+
+      // Client-side VAD
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(media);
+      microphone.connect(analyser);
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      let silenceStart = Date.now();
+      let isSilent = true;
+
+      const checkSilence = () => {
+        if (disposed.current || rec.state !== "recording") return;
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for(let i=0; i<bufferLength; i++) sum += dataArray[i];
+        const average = sum / bufferLength;
+        if (average > 10) {
+           silenceStart = Date.now();
+           isSilent = false;
+        } else if (!isSilent && Date.now() - silenceStart > 1500) {
+           // 1.5 seconds of silence detected
+           if (rec.state === "recording") rec.stop();
+           isSilent = true;
+        }
+        requestAnimationFrame(checkSilence);
+      };
+      checkSilence();
+
       rec.onstop = () => {
         media.getTracks().forEach((t) => t.stop());
+        if (audioContext.state !== "closed") void audioContext.close();
+        if (ws.readyState === WebSocket.OPEN) ws.close();
+        
         if (stopTimer.current) clearTimeout(stopTimer.current);
         if (disposed.current) return;
         setState("transcribing");
@@ -151,7 +197,7 @@ export function VoiceCommand({
             setState("idle");
           });
       };
-      rec.start();
+      rec.start(250); // Send chunks every 250ms
       setElapsed(0);
       setState("listening");
       stopTimer.current = setTimeout(() => {

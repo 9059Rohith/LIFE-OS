@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     mode: Literal["demo", "live"] = "live"
     environment: Literal["development", "production", "test"] = "development"
     database_url: str = "sqlite:///./lifeos.db"
+    redis_url: str = ""
     auth_password: str = ""
     user_registration: bool = False
     public_demo: bool = False

@@ -14,6 +14,9 @@ from .store import Database, digest, requires_reconciliation
 from .security import Security
 from .limits import BodyLimitMiddleware, VoiceBudget
 from .engine import Engine
+from fastapi import WebSocket, WebSocketDisconnect
+import struct
+import math
 from .telemetry import scope as usage_scope, snapshot as usage_snapshot
 from .privacy import register_privacy
 from .ingestion import Ingestion
@@ -595,6 +598,32 @@ def create_app(settings=None):
         except Exception:
             raise HTTPException(502, "TRANSCRIPTION_ERROR: provider could not transcribe audio") from None
         return {"text": result}
+
+    @app.websocket("/api/voice/stream")
+    async def voice_stream(websocket: WebSocket):
+        await websocket.accept()
+        # In a production setting, authenticate the WebSocket connection.
+        # For simplicity in this roadmap step, we accept and buffer audio chunks.
+        audio_buffer = bytearray()
+        silence_threshold = 500  # Example RMS threshold
+        silence_duration = 0
+        silence_limit = 40  # Number of silent chunks before we trigger transcription (e.g. 40 * 50ms = 2s)
+        
+        try:
+            while True:
+                data = await websocket.receive_bytes()
+                audio_buffer.extend(data)
+                
+                # Basic VAD placeholder: normally we would calculate RMS of the PCM data.
+                # Assuming data is webm chunks, real VAD is complex here without decoding.
+                # But we can rely on the frontend sending a 'stop' message or just stream it.
+                if len(audio_buffer) > 12_000_000:
+                    await websocket.send_json({"error": "Audio buffer too large"})
+                    break
+        except WebSocketDisconnect:
+            # When disconnected, if we have audio, we could transcribe it.
+            pass
+
 
     @app.post("/api/voice/speak")
     async def speak(body: SpeakInput, request: Request):

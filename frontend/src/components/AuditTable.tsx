@@ -79,13 +79,44 @@ export function AuditTable({
           </p>
         )}
       </div>
-      <details className="metrics">
-        <summary>
-          <Database size={16} />
-          Measured workspace metrics
-        </summary>
-        <pre>{display(metrics)}</pre>
-      </details>
+      <div className="panel metrics-panel" style={{ marginTop: "2rem" }}>
+        <div className="panel-heading">
+          <h2>
+            <Database size={17} style={{ marginRight: "0.5rem", verticalAlign: "middle" }} />
+            Usage & Cost Metrics
+          </h2>
+          <span className="count">{metrics.samples ? String(metrics.samples) : 0} samples</span>
+        </div>
+        <div className="metrics-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginTop: "1rem" }}>
+          <div className="metric-card" style={{ padding: "1rem", background: "var(--bg-layer-2)", borderRadius: "8px" }}>
+            <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>Events / Actions</h4>
+            <div style={{ fontSize: "1.5rem", fontWeight: "600" }}>{String(metrics.events || 0)} / {String(metrics.tool_calls || 0)}</div>
+          </div>
+          <div className="metric-card" style={{ padding: "1rem", background: "var(--bg-layer-2)", borderRadius: "8px" }}>
+            <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>Total Tokens</h4>
+            <div style={{ fontSize: "1.5rem", fontWeight: "600" }}>
+              {(metrics.model_token_usage as any)?.total_tokens?.toLocaleString() || 0}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+              In: {(metrics.model_token_usage as any)?.input_tokens?.toLocaleString() || 0} | 
+              Out: {(metrics.model_token_usage as any)?.output_tokens?.toLocaleString() || 0}
+            </div>
+          </div>
+          <div className="metric-card" style={{ padding: "1rem", background: "var(--bg-layer-2)", borderRadius: "8px" }}>
+            <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>Estimated Cost</h4>
+            <div style={{ fontSize: "1.5rem", fontWeight: "600", color: "var(--color-primary)" }}>
+              ${(((metrics.model_token_usage as any)?.input_tokens || 0) * (0.150 / 1000000) + ((metrics.model_token_usage as any)?.output_tokens || 0) * (0.600 / 1000000)).toFixed(4)}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>Based on gpt-4o-mini pricing</div>
+          </div>
+          <div className="metric-card" style={{ padding: "1rem", background: "var(--bg-layer-2)", borderRadius: "8px" }}>
+            <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>Latency (p95)</h4>
+            <div style={{ fontSize: "1.5rem", fontWeight: "600" }}>
+              {(metrics.latency_ms as any)?.p95 ? `${(metrics.latency_ms as any).p95}ms` : 'N/A'}
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

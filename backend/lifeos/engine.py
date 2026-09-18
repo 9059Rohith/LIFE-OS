@@ -6,6 +6,7 @@ from datetime import datetime
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 from fastapi import HTTPException
+from contextlib import asynccontextmanager
 from .store import uid, digest
 from .planning import APPS, calendar_time, extract, make_plan, make_reschedule_plan, now_iso, seed
 from .policy import approval_valid, classify
@@ -18,9 +19,26 @@ class Engine:
     def __init__(self, db, settings, providers=None):
         self.db, self.settings, self.providers = db, settings, providers
         self.locks = {}
+        self.redis = None
+        if getattr(settings, "redis_url", None):
+            try:
+                import redis.asyncio as redis
+                self.redis = redis.from_url(settings.redis_url)
+            except ImportError:
+                pass
 
-    def lock(self, owner):
-        return self.locks.setdefault(owner, asyncio.Lock())
+    @asynccontextmanager
+    async def lock(self, owner):
+        if self.redis:
+            # Distributed Redis lock for multi-replica deployments
+            lock_name = f"lifeos_lock_{owner}"
+            async with self.redis.lock(lock_name, timeout=60, blocking_timeout=10):
+                yield
+        else:
+            # Fallback to local memory lock for single-replica / demo deployments
+            local_lock = self.locks.setdefault(owner, asyncio.Lock())
+            async with local_lock:
+                yield
 
     def event(self, owner, id):
         event = self.db.get(owner, "event", id)
