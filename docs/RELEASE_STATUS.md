@@ -22,6 +22,8 @@ LIFEOS runs locally in live mode. A separate password-protected **live Railway s
 
 - A fresh 18 September check reproduced a WhatsApp chat-selection race: the fixed 500 ms wait sometimes returned `AUTHORIZATION_ERROR` even though the exact configured chat existed. The desktop now waits for that chat header and its composer before continuing. Seven desktop tests passed, the packaged bridge file matches source, and the rebuilt installer restored a hosted WhatsApp HTTP 200 read with one real item plus five `read_access_verified` integration statuses. No message was sent.
 
+- A fresh hosted configuration audit found the required Railway variables populated, including the Google client pair, hosted callback, Discord settings, WhatsApp contact and desktop bridge. The OAuth connect endpoint requested the exact hosted callback, yet Google returned `redirect_uri_mismatch`. The connected Calendar view contained one item and no flight or client-meeting candidate for the existing live planner; no provider test records were invented. The Windows certificate stores contained zero currently valid code-signing certificates with a private key.
+
 ## Release blockers
 
 1. **Hosted Google reconnect:** add `https://lifeos-live-production.up.railway.app/api/integrations/google/callback` to the OAuth web client's authorized redirect URIs so the owner can reauthorize if the transferred grant expires or is revoked. The current grant passes live Gmail, Calendar and Drive reads.
