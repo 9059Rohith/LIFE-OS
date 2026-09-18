@@ -146,6 +146,26 @@ async function inWhatsAppPage(job) {
 async function runWhatsAppJob(contents, job) {
   let attempted = false;
   try {
+    const waitForSelectedChat = async () => {
+      const deadline = Date.now() + 8000;
+      const source = `(() => {
+        const expectedContact = ${JSON.stringify(job.payload?.contact)};
+        const header = document.querySelector('#main header');
+        const titled = [...(header?.querySelectorAll('[title]') || [])]
+          .filter((node) => node.getAttribute('title') === expectedContact && node.textContent.trim() === expectedContact);
+        const named = header?.querySelector('[data-testid="conversation-info-header-chat-title"]');
+        const exactHeader = titled.length === 1 || named?.textContent.trim() === expectedContact;
+        const composers = [...document.querySelectorAll('#main [data-testid="conversation-compose-box-input"], #main [role="textbox"][contenteditable="true"]')]
+          .filter((node) => node.getAttribute('contenteditable') === 'true'
+            && ['Type a message', 'Type a message to ' + expectedContact].includes(node.getAttribute('aria-label')));
+        return exactHeader && composers.length === 1;
+      })()`;
+      while (Date.now() < deadline) {
+        if (await contents.executeJavaScript(source).catch(() => false)) return true;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      return false;
+    };
     let answer;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       answer = await contents.executeJavaScript(`(${inWhatsAppPage.toString()})(${JSON.stringify(job)})`);
@@ -157,7 +177,9 @@ async function runWhatsAppJob(contents, job) {
       contents.sendInputEvent({ type: "mouseMove", x, y });
       contents.sendInputEvent({ type: "mouseDown", x, y, button: "left", clickCount: 1 });
       contents.sendInputEvent({ type: "mouseUp", x, y, button: "left", clickCount: 1 });
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (!await waitForSelectedChat()) {
+        return { ok: false, error_code: "AUTHORIZATION_ERROR", attempted: false };
+      }
     }
     if (answer?.error_code === "CLICK_REQUIRED") {
       return { ok: false, error_code: "AUTHORIZATION_ERROR", attempted: false };

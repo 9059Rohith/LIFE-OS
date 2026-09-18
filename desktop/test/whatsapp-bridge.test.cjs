@@ -2,7 +2,7 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { inWhatsAppPage } = require("../whatsapp-bridge.cjs");
+const { inWhatsAppPage, runWhatsAppJob } = require("../whatsapp-bridge.cjs");
 
 function installConversation(t, messages) {
   const previous = global.document;
@@ -75,4 +75,29 @@ test("WhatsApp verification reads the message-container layout used by the signe
     operation: "verify", payload: { contact: "Allowed chat", id: "real-id", body: "Approved message" },
   });
   assert.deepEqual(answer, { ok: true, result: { verified: true, provider_id: "real-id" } });
+});
+
+test("WhatsApp bridge waits for the selected chat before retrying the job", async () => {
+  let checks = 0;
+  let jobs = 0;
+  const clicks = [];
+  const contents = {
+    async executeJavaScript(source) {
+      if (source.includes("const expectedContact =")) {
+        checks += 1;
+        return checks >= 3;
+      }
+      jobs += 1;
+      if (jobs === 1) return { ok: false, error_code: "CLICK_REQUIRED", click: { x: 40, y: 50 } };
+      assert.ok(checks >= 3, "job retried only after chat and composer are ready");
+      return { ok: true, result: { verified: true } };
+    },
+    sendInputEvent(event) { clicks.push(event.type); },
+  };
+  const answer = await runWhatsAppJob(contents, {
+    operation: "check", payload: { contact: "Allowed chat" },
+  });
+  assert.deepEqual(answer, { ok: true, result: { verified: true } });
+  assert.equal(jobs, 2);
+  assert.deepEqual(clicks, ["mouseMove", "mouseDown", "mouseUp"]);
 });
