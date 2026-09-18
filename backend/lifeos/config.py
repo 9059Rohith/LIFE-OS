@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     environment: Literal["development", "production", "test"] = "development"
     database_url: str = "sqlite:///./lifeos.db"
     auth_password: str = ""
+    user_registration: bool = False
     public_demo: bool = False
     encryption_key: str = ""
     allowed_origins: list[str] = [
@@ -39,6 +40,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def guard(self) -> Self:
+        if self.user_registration and self.mode != "live":
+            raise ValueError("User registration requires live mode")
         if self.whatsapp_bridge_enabled and (self.mode != "live" or not self.whatsapp_contact):
             raise ValueError("Desktop WhatsApp bridge requires live mode and an allowlisted contact")
         if self.public_demo and not (self.mode == "demo" and self.environment == "production"):

@@ -242,19 +242,25 @@ class Ingestion:
             await asyncio.gather(*pending, return_exceptions=True)
 
     def register(self, app, security):
+        def live_owner(request, mutation=False):
+            owner = security.require(request, mutation)
+            if self.settings.user_registration and self.settings.mode == "live" and owner != "owner":
+                raise HTTPException(403, "AUTHORIZATION_ERROR: primary owner required")
+            return owner
+
         @app.get("/api/ingestion")
         async def status(request: Request):
-            return self.status(security.require(request))
+            return self.status(live_owner(request))
 
         @app.post("/api/ingestion")
         async def configure(body: IngestionSettings, request: Request):
-            owner = security.require(request, True)
+            owner = live_owner(request, True)
             if not body.enabled:
                 await self.pause(owner)
             return self.configure(owner, body)
 
         @app.post("/api/ingestion/scan")
         async def scan(request: Request):
-            owner = security.require(request, True)
+            owner = live_owner(request, True)
             security.rate("ingestion-scan:" + owner, 1)
             return await self.scan(owner)

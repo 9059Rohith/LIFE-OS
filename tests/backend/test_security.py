@@ -108,6 +108,64 @@ def test_live_auth_and_guard(tmp_path):
         assert c.get("/api/demo/apps").json() == []
 
 
+def test_registered_users_receive_isolated_sessions_and_work_records(tmp_path):
+    settings = Settings(
+        mode="live",
+        auth_password="a-strong-test-password-only",
+        encryption_key=Fernet.generate_key().decode(),
+        user_registration=True,
+        database_url=f"sqlite:///{tmp_path}/multiuser.db",
+    )
+    app = create_app(settings)
+    owner, alice = TestClient(app), TestClient(app)
+    owner_login = owner.post("/api/auth/login", json={"password": settings.auth_password})
+    owner.headers["X-CSRF-Token"] = owner_login.json()["csrf_token"]
+    owner_task = owner.post("/api/work/tasks", json={"title": "Owner-only task"})
+    assert owner_task.status_code == 200
+
+    registered = alice.post(
+        "/api/auth/register",
+        json={"username": "alice", "password": "a-different-strong-password"},
+    )
+    assert registered.status_code == 200
+    assert registered.json()["user"]["id"] == "user:alice"
+    assert registered.json()["user"]["id"] != owner_login.json()["user"]["id"]
+    alice.headers["X-CSRF-Token"] = registered.json()["csrf_token"]
+
+    assert alice.get("/api/work/tasks").json()["items"] == []
+    assert alice.get(f"/api/work/tasks/{owner_task.json()['id']}").status_code == 404
+    assert alice.post("/api/work/tasks", json={"title": "Alice-only task"}).status_code == 200
+    assert [item["title"] for item in owner.get("/api/work/tasks").json()["items"]] == ["Owner-only task"]
+    assert alice.get("/api/events").status_code == 403
+    assert alice.get("/api/integrations").status_code == 403
+    assert alice.get("/api/ingestion").status_code == 403
+
+    duplicate = TestClient(app).post(
+        "/api/auth/register",
+        json={"username": "alice", "password": "another-strong-password"},
+    )
+    assert duplicate.status_code == 409
+    relogin = TestClient(app).post(
+        "/api/auth/login",
+        json={"username": "alice", "password": "a-different-strong-password"},
+    )
+    assert relogin.status_code == 200
+
+
+def test_registration_is_disabled_unless_explicitly_enabled(tmp_path):
+    settings = Settings(
+        mode="live",
+        auth_password="a-strong-test-password-only",
+        encryption_key=Fernet.generate_key().decode(),
+        database_url=f"sqlite:///{tmp_path}/registration-disabled.db",
+    )
+    with TestClient(create_app(settings)) as client:
+        assert client.post(
+            "/api/auth/register",
+            json={"username": "alice", "password": "a-different-strong-password"},
+        ).status_code == 404
+
+
 def test_public_demo_requires_password_login_and_secure_configuration(tmp_path):
     with pytest.raises(ValueError):
         Settings(mode="demo", environment="production", public_demo=True, auth_password="too-short")

@@ -1,5 +1,4 @@
 import asyncio
-import hmac
 import json
 import secrets
 import time
@@ -21,7 +20,7 @@ from .ingestion import Ingestion
 from .app_screens import register_app_screens
 from .work import register_work
 from .planning import APPS, SCENARIOS, seed
-from .schemas import EventInput, DemoInput, ApprovalInput, EditInput, LoginInput, DesktopBridgeResult, Preferences, SpeakInput
+from .schemas import EventInput, DemoInput, ApprovalInput, EditInput, LoginInput, RegistrationInput, DesktopBridgeResult, Preferences, SpeakInput
 
 
 def create_app(settings=None):
@@ -152,16 +151,16 @@ def create_app(settings=None):
 
     @app.post("/api/desktop/bridge/next")
     async def desktop_bridge_next(request: Request):
-        owner = security.require(request, True)
-        if not desktop_bridge or owner != "owner":
+        security.require_primary_owner(request, True)
+        if not desktop_bridge:
             raise HTTPException(404, "Desktop bridge is unavailable")
         job = await desktop_bridge.next_job()
         return {"job": job}
 
     @app.post("/api/desktop/bridge/result")
     async def desktop_bridge_result(body: DesktopBridgeResult, request: Request):
-        owner = security.require(request, True)
-        if not desktop_bridge or owner != "owner":
+        security.require_primary_owner(request, True)
+        if not desktop_bridge:
             raise HTTPException(404, "Desktop bridge is unavailable")
         if len(json.dumps(body.result or {})) > 64000:
             raise HTTPException(413, "Desktop bridge result is too large")
@@ -177,6 +176,12 @@ def create_app(settings=None):
             "mode": settings.mode,
             "voice_available": bool(settings.openai_api_key),
         }
+
+    def require_live_primary_owner(request, mutation=False):
+        owner = security.require(request, mutation)
+        if settings.user_registration and settings.mode == "live" and owner != "owner":
+            raise HTTPException(403, "AUTHORIZATION_ERROR: primary owner required")
+        return owner
 
     @app.get("/api/session")
     def session(request: Request, response: Response):
@@ -195,12 +200,21 @@ def create_app(settings=None):
         origin = request.headers.get("origin")
         if origin and origin not in settings.allowed_origins:
             raise HTTPException(403, "Origin rejected")
-        if (
-            (settings.mode != "live" and not settings.public_demo)
-            or not hmac.compare_digest(body.password, settings.auth_password)
-        ):
+        if settings.mode != "live" and not settings.public_demo:
             raise HTTPException(401, "AUTHENTICATION_ERROR: invalid credentials")
-        return session_payload(security.create(response, "owner"))
+        owner = security.authenticate(body.username, body.password)
+        if not owner:
+            raise HTTPException(401, "AUTHENTICATION_ERROR: invalid credentials")
+        return session_payload(security.create(response, owner))
+
+    @app.post("/api/auth/register")
+    def register(body: RegistrationInput, request: Request, response: Response):
+        security.rate("register:" + (request.client.host if request.client else "unknown"), 3)
+        origin = request.headers.get("origin")
+        if origin and origin not in settings.allowed_origins:
+            raise HTTPException(403, "Origin rejected")
+        account = security.register(body.username, body.password)
+        return session_payload(security.create(response, account["owner"]))
 
     @app.post("/api/auth/logout")
     def logout(request: Request, response: Response):
@@ -213,7 +227,7 @@ def create_app(settings=None):
 
     @app.get("/api/events")
     def events(request: Request):
-        owner = security.require(request)
+        owner = require_live_primary_owner(request)
         retention = engine.settings_for(owner)["retention_days"] * 86400
         return list(
             reversed(
@@ -230,13 +244,13 @@ def create_app(settings=None):
 
     @app.post("/api/events")
     async def new_event(body: EventInput, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             return await engine.plan(owner, body.text, body.source, body.simulation)
 
     @app.get("/api/events/{id}")
     def event(id: str, request: Request):
-        return engine.event(security.require(request), id)
+        return engine.event(require_live_primary_owner(request), id)
 
     @app.post("/api/demo/reset")
     async def reset(request: Request):
@@ -266,13 +280,13 @@ def create_app(settings=None):
 
     @app.post("/api/events/{id}/approve")
     async def approve(id: str, body: ApprovalInput, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             return engine.approve(owner, engine.event(owner, id), body.action_ids, body.version)
 
     @app.patch("/api/events/{id}/actions/{action_id}")
     async def edit(id: str, action_id: str, body: EditInput, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             event = engine.event(owner, id)
             action = next((a for a in event["actions"] if a["id"] == action_id), None)
@@ -342,7 +356,7 @@ def create_app(settings=None):
 
     @app.post("/api/events/{id}/actions/{action_id}/reject")
     async def reject(id: str, action_id: str, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             event = engine.event(owner, id)
             action = next((a for a in event["actions"] if a["id"] == action_id), None)
@@ -358,19 +372,19 @@ def create_app(settings=None):
     @app.post("/api/events/{id}/execute")
     @app.post("/api/events/{id}/retry")
     async def execute(id: str, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             return await engine.execute(owner, engine.event(owner, id), request.url.path.endswith("retry"))
 
     @app.post("/api/events/{id}/actions/{action_id}/reconcile")
     async def reconcile_action(id: str, action_id: str, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             return await engine.reconcile(owner, engine.event(owner, id), action_id)
 
     @app.post("/api/events/{id}/cancel")
     async def cancel(id: str, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         event = engine.event(owner, id)
         event["cancel_requested"] = True
         event["status"] = "cancelled"
@@ -381,7 +395,7 @@ def create_app(settings=None):
 
     @app.post("/api/events/{id}/apply")
     async def apply(id: str, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             event = engine.event(owner, id)
             if not event["simulation"]:
@@ -395,7 +409,7 @@ def create_app(settings=None):
 
     @app.post("/api/events/{id}/undo")
     async def undo(id: str, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
             return await engine.undo(owner, engine.event(owner, id))
 
@@ -457,7 +471,7 @@ def create_app(settings=None):
 
     @app.get("/api/integrations")
     async def integrations(request: Request):
-        owner = security.require(request)
+        owner = require_live_primary_owner(request)
         google = bool(await token_loader(owner, "google"))
         snapshot = db.get(owner, "integration_check", owner + ":integration_check")
         fresh = bool(snapshot and 0 <= time.time() - snapshot.get("checked_at", 0) < 86400)
@@ -503,7 +517,7 @@ def create_app(settings=None):
     async def check_integrations(request: Request):
         from .diagnostics import connection_checks
 
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         security.rate("provider-check:" + owner, 3)
         if diagnostic_lock.locked():
             raise HTTPException(429, "A connection check is already running; wait for its result")
@@ -520,7 +534,7 @@ def create_app(settings=None):
 
     @app.get("/api/integrations/google/connect")
     async def connect(request: Request):
-        owner = security.require(request)
+        owner = require_live_primary_owner(request)
         if settings.mode != "live" or not settings.google_client_id:
             raise HTTPException(409, "Google OAuth requires live mode and configured credentials")
         security.rate("oauth-connect:" + owner, 5)
@@ -562,7 +576,7 @@ def create_app(settings=None):
 
     @app.post("/api/voice/transcribe")
     async def transcribe(request: Request, audio: UploadFile = File(...)):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         if not settings.openai_api_key:
             raise HTTPException(503, "TRANSCRIPTION_ERROR: configure OpenAI voice access")
         data = await audio.read(12_000_001)
@@ -584,7 +598,7 @@ def create_app(settings=None):
 
     @app.post("/api/voice/speak")
     async def speak(body: SpeakInput, request: Request):
-        owner = security.require(request, True)
+        owner = require_live_primary_owner(request, True)
         if not settings.openai_api_key:
             raise HTTPException(503, "TTS_ERROR: configure OpenAI voice access")
         from .ai import speak
