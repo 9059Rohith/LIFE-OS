@@ -73,6 +73,96 @@ async def test_calendar_patch_is_conditional_and_preserves_identity():
 
 
 @pytest.mark.asyncio
+async def test_calendar_write_probe_reads_back_and_removes_private_event():
+    calls = []
+    event = None
+    deleted = False
+
+    def handler(request):
+        nonlocal event, deleted
+        calls.append(request.method)
+        if request.method == "POST":
+            event = json.loads(request.content)
+            assert event["transparency"] == "transparent"
+            assert event["visibility"] == "private"
+            assert "attendees" not in event
+            assert request.url.params["sendUpdates"] == "none"
+            return httpx.Response(200, json={**event, "status": "confirmed"})
+        if request.method == "DELETE":
+            assert request.url.params["sendUpdates"] == "none"
+            deleted = True
+            return httpx.Response(204)
+        assert request.url.path.endswith("/" + event["id"])
+        return httpx.Response(200, json={**event, "status": "cancelled" if deleted else "confirmed"})
+
+    provider = client(handler)
+    result = await provider.verify_calendar_write_access("owner")
+    assert result == {"status": "write_access_verified", "event_removed": True}
+    assert calls == ["POST", "GET", "DELETE", "GET"]
+    await provider.close()
+
+
+@pytest.mark.asyncio
+async def test_calendar_write_probe_denial_is_not_reported_as_verified():
+    calls = []
+
+    def handler(request):
+        calls.append(request.method)
+        return httpx.Response(403, json={"error": "forbidden"})
+
+    provider = client(handler)
+    with pytest.raises(ProviderError) as error:
+        await provider.verify_calendar_write_access("owner")
+    assert error.value.code == "AUTHORIZATION_ERROR"
+    assert calls == ["POST"]
+    await provider.close()
+
+
+@pytest.mark.asyncio
+async def test_calendar_write_probe_recovers_uncertain_insert_by_exact_id():
+    calls = []
+    event = None
+    deleted = False
+
+    def handler(request):
+        nonlocal event, deleted
+        calls.append(request.method)
+        if request.method == "POST":
+            event = json.loads(request.content)
+            raise httpx.ReadTimeout("response lost after insert", request=request)
+        if request.method == "DELETE":
+            deleted = True
+            return httpx.Response(204)
+        assert request.url.path.endswith("/" + event["id"])
+        return httpx.Response(200, json={**event, "status": "cancelled" if deleted else "confirmed"})
+
+    provider = client(handler)
+    assert (await provider.verify_calendar_write_access("owner"))["event_removed"] is True
+    assert calls == ["POST", "GET", "GET", "DELETE", "GET"]
+    await provider.close()
+
+
+@pytest.mark.asyncio
+async def test_calendar_write_probe_never_claims_success_when_cleanup_fails():
+    event = None
+
+    def handler(request):
+        nonlocal event
+        if request.method == "POST":
+            event = json.loads(request.content)
+            return httpx.Response(200, json={**event, "status": "confirmed"})
+        if request.method == "DELETE":
+            return httpx.Response(403, json={"error": "denied"})
+        return httpx.Response(200, json={**event, "status": "confirmed"})
+
+    provider = client(handler)
+    with pytest.raises(ProviderError, match="cleanup could not be confirmed") as error:
+        await provider.verify_calendar_write_access("owner")
+    assert error.value.uncertain is True
+    await provider.close()
+
+
+@pytest.mark.asyncio
 async def test_stale_calendar_approval_blocks_write():
     provider = client(lambda r: httpx.Response(200, json={"id": "e", "etag": "new"}))
     with pytest.raises(ProviderError, match="STALE_APPROVAL"):

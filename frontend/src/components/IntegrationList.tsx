@@ -17,6 +17,8 @@ export function IntegrationList({
   const [checks, setChecks] = useState<Integration[] | null>(null);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState("");
+  const [calendarWriting, setCalendarWriting] = useState(false);
+  const [calendarWriteResult, setCalendarWriteResult] = useState("");
   const initialCheck = useRef(false);
   const checkConnections = useCallback(async () => {
     setChecking(true);
@@ -29,6 +31,21 @@ export function IntegrationList({
       );
     } finally {
       setChecking(false);
+    }
+  }, []);
+  const checkCalendarWrite = useCallback(async () => {
+    setCalendarWriting(true);
+    setCalendarWriteResult("");
+    try {
+      const result = await api<{ status: string; event_removed: boolean }>("/apps/calendar/verify-write", "POST", {});
+      if (result.status !== "write_access_verified" || !result.event_removed) {
+        throw new Error("Calendar verification did not confirm cleanup.");
+      }
+      setCalendarWriteResult("Write access verified. The private test event was read back and removed.");
+    } catch (error) {
+      setCalendarWriteResult(error instanceof Error ? error.message : "Calendar write verification failed.");
+    } finally {
+      setCalendarWriting(false);
     }
   }, []);
   useEffect(() => {
@@ -75,6 +92,15 @@ export function IntegrationList({
             <div>
               <h3>{item.name}</h3>
               <p>{item.description}</p>
+              {item.id === "calendar" && mode !== "demo" && item.status === "read_access_verified" && (
+                <div className="integration-write-check">
+                  <button className="button small" disabled={calendarWriting} onClick={() => void checkCalendarWrite()}>
+                    {calendarWriting ? "Verifying write access…" : "Verify Calendar write access"}
+                  </button>
+                  <p>A private five-minute test event is created, checked, and deleted. No guests are invited.</p>
+                  {calendarWriteResult && <p role="status" aria-live="polite">{calendarWriteResult}</p>}
+                </div>
+              )}
             </div>
             <Status value={item.status} />
             {["gmail", "calendar", "drive"].includes(item.id) &&

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { api } from "../api";
-import type { Integration, AppRecords, Page } from "../types";
+import type { Integration, AppRecords, Page, LifeEvent } from "../types";
 import { IntegrationList } from "./IntegrationList";
 import { ApplicationRecords } from "./ApplicationRecords";
 import { ConnectedApps } from "./ConnectedApps";
@@ -15,10 +15,12 @@ export function WorkspacePages({
   page,
   onError,
   mode,
+  onOpenPlan,
 }: {
   page: Page;
   onError: (message: string) => void;
   mode: string;
+  onOpenPlan: (plan: LifeEvent) => void;
 }) {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [apps, setApps] = useState<AppRecords[]>([]);
@@ -163,7 +165,7 @@ export function WorkspacePages({
               connect={connect}
             />
           )}
-          {page === "applications" && (mode === "demo" ? <ApplicationRecords apps={apps} /> : <ConnectedApps />)}
+          {page === "applications" && (mode === "demo" ? <ApplicationRecords apps={apps} /> : <ConnectedApps onOpenPlan={onOpenPlan} />)}
           {page === "audit" && (
             <AuditTable
               audit={audit}

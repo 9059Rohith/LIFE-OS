@@ -18,6 +18,8 @@ type Item = {
   attachments?: number;
   title?: string;
   start?: string;
+  end?: string;
+  etag?: string;
   location?: string;
   name?: string;
   type?: string;
@@ -43,6 +45,13 @@ function clock(value?: string) {
   return Number.isNaN(parsed.getTime()) ? "" : parsed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function localInput(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const local = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 function PanelFeedback({ panel, name, integration }: { panel: PanelState; name: AppName; integration?: Integration }) {
   if (integration?.status === "not_connected") {
     return <p className="unified-feedback">Connect {name === "gmail" || name === "calendar" || name === "drive" ? "Google" : appNames[name]} in Integrations to show your real {appNames[name]} data.</p>;
@@ -61,7 +70,7 @@ function ProviderHeading({ name, detail }: { name: AppName; detail?: string }) {
   </div>;
 }
 
-export function ConnectedApps() {
+export function ConnectedApps({ onOpenPlan }: { onOpenPlan: (plan: LifeEvent) => void }) {
   const [panels, setPanels] = useState<Record<AppName, PanelState>>(initialPanels);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [events, setEvents] = useState<LifeEvent[]>([]);
@@ -70,6 +79,13 @@ export function ConnectedApps() {
   const [detailError, setDetailError] = useState("");
   const [checkingConnections, setCheckingConnections] = useState(false);
   const [connectionError, setConnectionError] = useState("");
+  const [selectedCalendar, setSelectedCalendar] = useState<Item | null>(null);
+  const [newStart, setNewStart] = useState("");
+  const [newEnd, setNewEnd] = useState("");
+  const [notifyDiscord, setNotifyDiscord] = useState(false);
+  const [notifyWhatsapp, setNotifyWhatsapp] = useState(false);
+  const [planning, setPlanning] = useState(false);
+  const [planError, setPlanError] = useState("");
   const generation = useRef(0);
   const mailGeneration = useRef(0);
 
@@ -139,6 +155,44 @@ export function ConnectedApps() {
       setConnectionError(failure instanceof Error ? failure.message : "Connection check failed.");
     } finally {
       setCheckingConnections(false);
+    }
+  }
+
+  function chooseCalendarEvent(event: Item) {
+    setSelectedCalendar(event);
+    setNewStart(localInput(event.start || ""));
+    setNewEnd(localInput(event.end || ""));
+    setNotifyDiscord(false);
+    setNotifyWhatsapp(false);
+    setPlanError("");
+  }
+
+  async function planCalendarChange(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedCalendar) return;
+    setPlanning(true);
+    setPlanError("");
+    try {
+      const start = new Date(newStart);
+      const end = new Date(newEnd);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start)
+        throw new Error("Choose a valid end time after the start time.");
+      if (start.getTime() === new Date(selectedCalendar.start || "").getTime())
+        throw new Error("Choose a different start time for this event.");
+      const plan = await api<LifeEvent>("/apps/calendar/reschedule-plan", "POST", {
+        event_id: selectedCalendar.id,
+        expected_etag: selectedCalendar.etag,
+        new_start: start.toISOString(),
+        new_end: end.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+        notify_discord: notifyDiscord,
+        notify_whatsapp: notifyWhatsapp,
+      });
+      onOpenPlan(plan);
+    } catch (failure) {
+      setPlanError(failure instanceof Error ? failure.message : "Calendar plan could not be created.");
+    } finally {
+      setPlanning(false);
     }
   }
 
@@ -268,9 +322,22 @@ export function ConnectedApps() {
           <PanelFeedback panel={calendar} name="calendar" integration={integrationFor("calendar")} />
           {!calendar.loading && integrationFor("calendar")?.status !== "not_connected" && calendar.screen?.items.map((event) => <article className="unified-calendar-row" key={event.id}>
             <div className="unified-calendar-date"><strong>{event.start ? new Date(event.start).toLocaleDateString([], { day: "2-digit" }) : "–"}</strong><small>{event.start ? new Date(event.start).toLocaleDateString([], { month: "short" }) : ""}</small></div>
-            <div><strong>{event.title || "Untitled event"}</strong><small>{date(event.start)}{event.location ? ` · ${event.location}` : ""}</small></div>
+            <div className="unified-calendar-details"><strong>{event.title || "Untitled event"}</strong><small>{date(event.start)}{event.location ? ` · ${event.location}` : ""}</small></div>
+            {event.start?.includes("T") && event.end?.includes("T") && event.etag && <button type="button" className="unified-calendar-plan-button" onClick={() => chooseCalendarEvent(event)}>Plan move</button>}
           </article>)}
         </div>
+        {selectedCalendar && <form className="unified-calendar-plan" onSubmit={(event) => void planCalendarChange(event)}>
+          <strong>Move {selectedCalendar.title || "Calendar event"}</strong>
+          <p>Choose the new time. LIFEOS checks availability and prepares a plan for your approval; nothing is changed yet.</p>
+          <div className="unified-calendar-plan-fields">
+            <label>Start<input type="datetime-local" required value={newStart} onChange={(event) => setNewStart(event.target.value)} /></label>
+            <label>End<input type="datetime-local" required value={newEnd} onChange={(event) => setNewEnd(event.target.value)} /></label>
+          </div>
+          <label className="unified-calendar-plan-check"><input type="checkbox" checked={notifyDiscord} onChange={(event) => setNotifyDiscord(event.target.checked)} disabled={integrationFor("discord")?.status === "not_connected"} />Notify the configured Discord channel after Calendar verification</label>
+          <label className="unified-calendar-plan-check"><input type="checkbox" checked={notifyWhatsapp} onChange={(event) => setNotifyWhatsapp(event.target.checked)} disabled={integrationFor("whatsapp")?.status === "not_connected"} />Notify the configured WhatsApp contact after Calendar verification</label>
+          {planError && <p className="unified-calendar-plan-error" role="alert">{planError}</p>}
+          <div className="unified-calendar-plan-actions"><button type="button" onClick={() => setSelectedCalendar(null)}>Cancel</button><button type="submit" disabled={planning}>{planning ? "Checking Calendar…" : "Review plan"}</button></div>
+        </form>}
       </section>
 
       <section className="unified-provider unified-drive" aria-label="Drive screen" tabIndex={-1}>

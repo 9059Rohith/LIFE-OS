@@ -5,8 +5,21 @@ import re
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, Request
+from pydantic import BaseModel, ConfigDict, Field
 
 from .providers import DISCORD, GMAIL, GOOGLE, ProviderError, decode_body, message_parts, segment
+
+
+class CalendarRescheduleInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    event_id: str = Field(min_length=1, max_length=512)
+    expected_etag: str | None = Field(default=None, min_length=1, max_length=512)
+    new_start: str = Field(min_length=20, max_length=64)
+    new_end: str = Field(min_length=20, max_length=64)
+    timezone: str = Field(min_length=1, max_length=100)
+    notify_discord: bool = False
+    notify_whatsapp: bool = False
 
 
 def short(value, limit=4000):
@@ -42,10 +55,10 @@ def discord_avatar(author):
 
 def register_app_screens(app, settings, security, providers):
     def owner_for(request):
-        owner = security.require(request)
         if settings.mode != "live" or not providers:
+            security.require(request)
             raise HTTPException(409, "Connected application screens require live mode")
-        return owner
+        return security.require_primary_owner(request)
 
     async def checked(action):
         try:
@@ -142,7 +155,8 @@ def register_app_screens(app, settings, security, providers):
                 "singleEvents": "true", "orderBy": "startTime", "maxResults": 30,
             })
             items = [{
-                "id": short(event.get("id"), 128),
+                "id": short(event.get("id"), 512),
+                "etag": short(event.get("etag"), 512),
                 "title": short(event.get("summary") or "Untitled event", 300),
                 "start": short(event.get("start", {}).get("dateTime") or event.get("start", {}).get("date"), 64),
                 "end": short(event.get("end", {}).get("dateTime") or event.get("end", {}).get("date"), 64),
@@ -151,6 +165,52 @@ def register_app_screens(app, settings, security, providers):
             return {"application": "calendar", "title": "Next 14 days", "items": items}
 
         return await checked(load())
+
+    @app.post("/api/apps/calendar/verify-write")
+    async def calendar_verify_write(request: Request):
+        if settings.mode != "live" or not providers:
+            security.require(request, True)
+            raise HTTPException(409, "Calendar write verification requires live mode")
+        owner = security.require_primary_owner(request, True)
+        security.rate("calendar-write-probe:" + owner, 2)
+        try:
+            result = await providers.verify_calendar_write_access(owner)
+        except ProviderError as exc:
+            raise HTTPException(
+                502, f"Calendar write verification failed ({exc.code}). "
+                "Check Calendar access and any temporary LIFEOS integration event."
+            ) from None
+        app.state.db.audit(owner, "calendar_write_verified", "Temporary Calendar event was created, read, and removed")
+        return result
+
+    @app.post("/api/apps/calendar/reschedule-plan")
+    async def calendar_reschedule_plan(body: CalendarRescheduleInput, request: Request):
+        if settings.mode != "live" or not providers:
+            security.require(request, True)
+            raise HTTPException(409, "Calendar rescheduling requires live mode")
+        owner = security.require_primary_owner(request, True)
+        security.rate("calendar-plan:" + owner, 10)
+        async with app.state.engine.lock(owner):
+            try:
+                return await asyncio.wait_for(
+                    app.state.engine.plan_reschedule(
+                        owner,
+                        body.event_id,
+                        body.new_start,
+                        body.new_end,
+                        body.timezone,
+                        notify_discord=body.notify_discord,
+                        notify_whatsapp=body.notify_whatsapp,
+                        expected_etag=body.expected_etag,
+                    ),
+                    timeout=35,
+                )
+            except ValueError as exc:
+                raise HTTPException(422, str(exc)) from None
+            except ProviderError as exc:
+                raise HTTPException(502, f"Calendar planning failed ({exc.code}). Check Integrations.") from None
+            except TimeoutError:
+                raise HTTPException(504, "Calendar did not respond in time. No plan was saved.") from None
 
     @app.get("/api/apps/drive")
     async def drive(request: Request):

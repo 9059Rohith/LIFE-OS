@@ -665,6 +665,11 @@ export default function App() {
             page={page}
             onError={onError}
             mode={session?.mode || "demo"}
+            onOpenPlan={(plan) => {
+              setEvent(plan);
+              setPage("overview");
+              void refreshEvents();
+            }}
           />
         )}
         <footer className="main-footer">

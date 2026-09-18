@@ -5,6 +5,7 @@ import base64
 import copy
 import hashlib
 import re
+import secrets
 import time
 from datetime import UTC, datetime, timedelta
 from email.message import EmailMessage
@@ -23,10 +24,13 @@ DISCORD = "https://discord.com/api/v10"
 
 
 class ProviderError(RuntimeError):
-    def __init__(self, message: str, code: str = "TOOL_ERROR", uncertain: bool = False):
+    def __init__(
+        self, message: str, code: str = "TOOL_ERROR", uncertain: bool = False, status_code: int | None = None
+    ):
         super().__init__(message)
         self.code = code
         self.uncertain = uncertain
+        self.status_code = status_code
 
 
 def segment(value) -> str:
@@ -175,6 +179,7 @@ class LiveProviders:
                         + f"Provider rejected request (HTTP {response.status_code})",
                         code,
                         uncertain,
+                        response.status_code,
                     )
                 if not response.content:
                     return {}
@@ -250,6 +255,76 @@ class LiveProviders:
                 "CLARIFICATION_REQUIRED",
             )
         return result.get("items", [])
+
+    async def verify_calendar_write_access(self, user_id):
+        """Create, read, and remove one private transparent event without guests."""
+        probe_id = "lifeos" + secrets.token_hex(16)
+        url = GOOGLE + "/calendar/v3/calendars/primary/events"
+        event_url = url + "/" + probe_id
+        start = (datetime.now(UTC) + timedelta(days=3)).replace(
+            hour=3, minute=0, second=0, microsecond=0
+        )
+        payload = {
+            "id": probe_id,
+            "summary": "LIFEOS integration write verification",
+            "description": "Temporary Calendar API verification; LIFEOS deletes this event immediately.",
+            "start": {"dateTime": start.isoformat()},
+            "end": {"dateTime": (start + timedelta(minutes=5)).isoformat()},
+            "transparency": "transparent",
+            "visibility": "private",
+        }
+        created = False
+        try:
+            try:
+                result = await self._google(
+                    user_id, "POST", url, params={"sendUpdates": "none"}, json=payload
+                )
+                created = True
+            except ProviderError as exc:
+                if not exc.uncertain:
+                    raise
+                # The event ID is chosen before the request, so an uncertain insert
+                # can be checked without creating a duplicate.
+                created = True
+                try:
+                    result = await self._google(user_id, "GET", event_url)
+                except ProviderError:
+                    raise exc from None
+            if result.get("id") != probe_id or result.get("status") == "cancelled":
+                raise ProviderError("Calendar created an unexpected verification event", "VERIFICATION_ERROR")
+            readback = await self._google(user_id, "GET", event_url)
+            if readback.get("id") != probe_id or readback.get("summary") != payload["summary"]:
+                raise ProviderError("Calendar write read-back did not match", "VERIFICATION_ERROR")
+        finally:
+            if created:
+                try:
+                    try:
+                        await self._google(
+                            user_id, "DELETE", event_url, params={"sendUpdates": "none"}
+                        )
+                    except ProviderError:
+                        # A timed-out delete may have succeeded. The read-back is
+                        # the authority for cleanup, including a 404/410 response.
+                        pass
+                    try:
+                        deleted = await self._google(user_id, "GET", event_url)
+                    except ProviderError as exc:
+                        if exc.status_code not in {404, 410}:
+                            raise
+                    else:
+                        if deleted.get("status") != "cancelled":
+                            raise ProviderError(
+                                "Temporary Calendar verification event was not deleted",
+                                "VERIFICATION_ERROR",
+                            )
+                except ProviderError as exc:
+                    raise ProviderError(
+                        "Calendar write verification cleanup could not be confirmed; inspect the "
+                        "temporary LIFEOS integration event in your primary calendar",
+                        "VERIFICATION_ERROR",
+                        True,
+                    ) from exc
+        return {"status": "write_access_verified", "event_removed": True}
 
     async def drive_search(self, user_id, query):
         escaped = query[:100].replace("\\", "\\\\").replace("'", "\\'")

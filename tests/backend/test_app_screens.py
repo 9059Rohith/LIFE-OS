@@ -69,3 +69,97 @@ def test_whatsapp_browser_navigation_timeout_is_a_bounded_screen_error(tmp_path)
         response = browser.get("/api/apps/whatsapp")
         assert response.status_code == 502
         assert "unavailable" in response.json()["detail"].lower()
+
+
+def test_calendar_write_probe_requires_session_and_csrf_and_audits_success(tmp_path):
+    app = create_app(Settings(
+        _env_file=None, mode="live", environment="test",
+        database_url=f"sqlite:///{tmp_path}/calendar-probe.db",
+        auth_password="test-workspace-password",
+        encryption_key=Fernet.generate_key().decode(),
+    ))
+    calls = []
+
+    async def probe(owner):
+        calls.append(owner)
+        return {"status": "write_access_verified", "event_removed": True}
+
+    app.state.engine.providers.verify_calendar_write_access = probe
+    with TestClient(app) as browser:
+        url = "/api/apps/calendar/verify-write"
+        assert browser.post(url).status_code == 401
+        login = browser.post("/api/auth/login", json={"password": "test-workspace-password"})
+        assert login.status_code == 200
+        assert browser.post(url).status_code == 403
+        response = browser.post(url, headers={"X-CSRF-Token": login.json()["csrf_token"]})
+        assert response.status_code == 200
+        assert response.json() == {"status": "write_access_verified", "event_removed": True}
+        assert calls == ["owner"]
+        assert any(entry["stage"] == "calendar_write_verified" for entry in app.state.db.list("owner", "audit"))
+
+
+def test_calendar_reschedule_route_saves_review_plan_without_provider_mutation(tmp_path):
+    app = create_app(Settings(
+        _env_file=None, mode="live", environment="test",
+        database_url=f"sqlite:///{tmp_path}/calendar-plan.db",
+        auth_password="test-workspace-password",
+        encryption_key=Fernet.generate_key().decode(),
+    ))
+    calls = []
+
+    async def calendar_read(owner, method, url, **kwargs):
+        calls.append((owner, method, url))
+        if url.endswith("/events/event-1"):
+            return {
+                "id": "event-1", "etag": "etag-1", "status": "confirmed",
+                "summary": "My meeting",
+                "start": {"dateTime": "2030-01-15T09:00:00+05:30"},
+                "end": {"dateTime": "2030-01-15T10:00:00+05:30"},
+            }
+        return {"items": []}
+
+    app.state.engine.providers._google = calendar_read
+    url = "/api/apps/calendar/reschedule-plan"
+    body = {
+        "event_id": "event-1", "expected_etag": "etag-1",
+        "new_start": "2030-01-15T14:00:00+05:30",
+        "new_end": "2030-01-15T15:00:00+05:30",
+        "timezone": "Asia/Kolkata",
+    }
+    with TestClient(app) as browser:
+        assert browser.post(url, json=body).status_code == 401
+        login = browser.post("/api/auth/login", json={"password": "test-workspace-password"})
+        assert browser.post(url, json=body).status_code == 403
+        response = browser.post(url, json=body, headers={"X-CSRF-Token": login.json()["csrf_token"]})
+        assert response.status_code == 200
+        plan = response.json()
+        assert plan["status"] == "awaiting_approval"
+        assert [action["application"] for action in plan["actions"]] == ["calendar"]
+        assert browser.get(f"/api/events/{plan['id']}").json()["id"] == plan["id"]
+        assert calls and all(owner == "owner" and method == "GET" for owner, method, _ in calls)
+
+
+def test_secondary_account_cannot_open_primary_provider_screens_or_plan(tmp_path):
+    settings = Settings(
+        _env_file=None, mode="live", environment="test",
+        database_url=f"sqlite:///{tmp_path}/secondary-screens.db",
+        auth_password="test-workspace-password",
+        encryption_key=Fernet.generate_key().decode(),
+        user_registration=True,
+    )
+    app = create_app(settings)
+    with TestClient(app) as secondary:
+        registered = secondary.post("/api/auth/register", json={
+            "username": "alice", "password": "a-different-strong-password",
+        })
+        assert registered.status_code == 200
+        settings.user_registration = False
+        assert secondary.get("/api/apps/calendar").status_code == 403
+        assert secondary.get("/api/apps/gmail").status_code == 403
+        assert secondary.get("/api/apps/discord").status_code == 403
+        csrf = {"X-CSRF-Token": registered.json()["csrf_token"]}
+        assert secondary.post("/api/apps/calendar/verify-write", headers=csrf).status_code == 403
+        assert secondary.post("/api/apps/calendar/reschedule-plan", headers=csrf, json={
+            "event_id": "event-1", "new_start": "2030-01-15T14:00:00+05:30",
+            "new_end": "2030-01-15T15:00:00+05:30", "timezone": "Asia/Kolkata",
+        }).status_code == 403

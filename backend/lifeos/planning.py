@@ -637,7 +637,9 @@ def make_reschedule_plan(
         },
     )
     message = f"{title} is planned for {new_start.astimezone(zone):%d %b, %H:%M %Z}."
-    if notify_discord and getattr(settings, "discord_bot_token", "") and getattr(settings, "discord_channel_id", ""):
+    if notify_discord and not (getattr(settings, "discord_bot_token", "") and getattr(settings, "discord_channel_id", "")):
+        raise ValueError("Discord notification is not configured")
+    if notify_discord:
         add(
             "discord",
             "send",
@@ -650,7 +652,9 @@ def make_reschedule_plan(
         (getattr(settings, "whatsapp_enabled", False) or getattr(settings, "whatsapp_bridge_enabled", False))
         and bool(getattr(settings, "whatsapp_contact", ""))
     )
-    if notify_whatsapp and whatsapp_ready:
+    if notify_whatsapp and not whatsapp_ready:
+        raise ValueError("WhatsApp notification is not configured")
+    if notify_whatsapp:
         add(
             "whatsapp",
             "send",

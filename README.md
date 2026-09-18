@@ -4,13 +4,13 @@
 
 A changed flight can affect a meeting and the people who need to know. LIFEOS finds known calendar and conversation targets, proposes changes, asks for approval, executes approved actions and reads back the result. It does not infer airport travel or pickup times.
 
-This repository includes a React command center, a FastAPI service, durable application state, a Windows shell for the actual Discord and WhatsApp websites, provider adapters and deployment configuration. The default configuration is live mode with an empty workspace. A separate live Railway service is deployed, while the existing public demo retains labeled local records. **The live product is not yet fully accepted**; see [current release status](docs/RELEASE_STATUS.md). This is a single-owner deployment design, not a reviewed multitenant service.
+This repository includes a React command center, a FastAPI service, durable application state, a Windows shell for the actual Discord and WhatsApp websites, provider adapters and deployment configuration. The default configuration is live mode with an empty workspace. A separate live Railway service is deployed, while the existing public demo retains labeled local records. **The live product is not yet fully accepted**; see [current release status](docs/RELEASE_STATUS.md). Account registration and isolated work records are available behind an off-by-default setting; connected provider actions remain restricted to the primary owner.
 
 The **My work** screen saves projects, goals, tasks, habits and notes in the owner database. Task completion updates linked goal/project progress; dated check-ins drive habit streaks; due dates and goal targets appear in a local agenda alongside Google Calendar events when connected. Activity and reminders come from saved changes, so a new live workspace shows empty states instead of invented statistics.
 
 ## Hosted live workspace
 
-The password-protected live workspace is at **https://lifeos-live-production.up.railway.app**. It runs the current source against a separate persistent volume. Public browser login, an initially empty work screen, a saved task surviving a service restart, and deletion passed on 18 September 2026. Gmail, Calendar, Drive, Discord, and WhatsApp passed real hosted read checks while the Windows desktop app was connected. The existing Google grant works, but a new hosted OAuth callback still receives `redirect_uri_mismatch`. No complete Calendar → Discord → WhatsApp send/read-back has been accepted yet. See [release status](docs/RELEASE_STATUS.md) before presenting cross-provider execution as complete.
+The password-protected live workspace is at **https://lifeos-live-production.up.railway.app**. It uses a separate persistent volume. Public browser login, an initially empty work screen, a saved task surviving a service restart, and deletion passed on 18 September 2026. Gmail, Calendar, Drive, Discord, and WhatsApp passed real hosted read checks while the Windows desktop app was connected. The hosted Google OAuth callback was added to the authorized redirect URIs and a fresh authorization request no longer failed with `redirect_uri_mismatch`. Calendar write access passed a private create/read/delete probe. No complete Calendar → Discord → WhatsApp send/read-back has been accepted yet. See [release status](docs/RELEASE_STATUS.md) before presenting cross-provider execution as complete.
 
 ## Public demo
 
@@ -169,7 +169,7 @@ This resets the current demo scenario and writes `docs/benchmark.json`. It recor
 
 ## Deployment and troubleshooting
 
-See [Deployment](docs/DEPLOYMENT.md) for Docker Compose, PostgreSQL, HTTPS, backups, live-mode setup and the release checklist. The separate Railway live service is deployed, but Google owner consent, hosted WhatsApp delivery and full cross-provider acceptance remain open.
+See [Deployment](docs/DEPLOYMENT.md) for Docker Compose, PostgreSQL, HTTPS, backups, live-mode setup and the release checklist. The hosted service uses SQLite on a Railway volume; [recovery instructions](docs/RECOVERY.md) describe its encrypted backup and restore tooling. Hosted WhatsApp delivery and full cross-provider acceptance remain open.
 
 | Symptom | Check |
 |---|---|
