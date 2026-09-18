@@ -244,7 +244,7 @@ class Ingestion:
     def register(self, app, security):
         def live_owner(request, mutation=False):
             owner = security.require(request, mutation)
-            if self.settings.user_registration and self.settings.mode == "live" and owner != "owner":
+            if self.settings.mode == "live" and owner != "owner":
                 raise HTTPException(403, "AUTHORIZATION_ERROR: primary owner required")
             return owner
 

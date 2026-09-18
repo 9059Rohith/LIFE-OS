@@ -174,12 +174,12 @@ def create_app(settings=None):
             "user": {"id": session["owner"], "name": preferences["name"]},
             "csrf_token": session["csrf"],
             "mode": settings.mode,
-            "voice_available": bool(settings.openai_api_key),
+            "voice_available": bool(settings.openai_api_key) and session["owner"] == "owner",
         }
 
     def require_live_primary_owner(request, mutation=False):
         owner = security.require(request, mutation)
-        if settings.user_registration and settings.mode == "live" and owner != "owner":
+        if settings.mode == "live" and owner != "owner":
             raise HTTPException(403, "AUTHORIZATION_ERROR: primary owner required")
         return owner
 

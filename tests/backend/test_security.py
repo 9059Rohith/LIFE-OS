@@ -166,6 +166,29 @@ def test_registration_is_disabled_unless_explicitly_enabled(tmp_path):
         ).status_code == 404
 
 
+def test_existing_secondary_session_stays_blocked_after_registration_is_disabled(tmp_path):
+    settings = Settings(
+        mode="live",
+        auth_password="a-strong-test-password-only",
+        encryption_key=Fernet.generate_key().decode(),
+        openai_api_key="configured-for-owner",
+        user_registration=True,
+        database_url=f"sqlite:///{tmp_path}/registration-toggle.db",
+    )
+    client = TestClient(create_app(settings))
+    registered = client.post(
+        "/api/auth/register",
+        json={"username": "alice", "password": "a-different-strong-password"},
+    )
+    assert registered.status_code == 200
+
+    settings.user_registration = False
+
+    assert client.get("/api/session").json()["voice_available"] is False
+    assert client.get("/api/integrations").status_code == 403
+    assert client.get("/api/ingestion").status_code == 403
+
+
 def test_public_demo_requires_password_login_and_secure_configuration(tmp_path):
     with pytest.raises(ValueError):
         Settings(mode="demo", environment="production", public_demo=True, auth_password="too-short")
@@ -293,6 +316,12 @@ async def test_cancellation_survives_inflight_provider_save(tmp_path):
 
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as c:
         session = (await c.get("/api/session")).json()
+        from lifeos.security import COOKIE
+
+        token = c.cookies.get(COOKIE)
+        stored_session = app.state.db.get("system", "session", app.state.security.token_hash(token))
+        stored_session["owner"] = "owner"
+        app.state.db.put("system", "session", app.state.security.token_hash(token), stored_session)
         c.headers["X-CSRF-Token"] = session["csrf_token"]
         event = (await c.post("/api/demo/run", json={"scenario": "flight"})).json()
         await c.post(
