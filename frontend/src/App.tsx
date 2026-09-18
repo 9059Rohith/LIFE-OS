@@ -36,6 +36,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [authNeeded, setAuthNeeded] = useState(false);
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [events, setEvents] = useState<LifeEvent[]>([]);
   const [event, setEvent] = useState<LifeEvent | null>(null);
   const [page, setPage] = useState<Page>("overview");
@@ -54,10 +55,11 @@ export default function App() {
     try {
       const value = await api<Session>("/session");
       setSession(value);
-      if (value.mode === "live") setPage("applications");
+      if (value.mode === "live") setPage(value.user.id === "owner" ? "applications" : "work");
       setCsrf(value.csrf_token);
       setAuthNeeded(false);
-      await refreshEvents();
+      if (value.mode === "demo" || value.user.id === "owner") await refreshEvents();
+      else { setEvents([]); setEvent(null); }
     } catch {
       setAuthNeeded(true);
     } finally {
@@ -68,7 +70,7 @@ export default function App() {
     void init();
   }, []);
   useEffect(() => {
-    if (!session) return;
+    if (!session || (session.mode === "live" && session.user.id !== "owner")) return;
     let active = true;
     const timer = setInterval(() => {
       void api<LifeEvent[]>("/events")
@@ -242,12 +244,13 @@ export default function App() {
   }
   async function login() {
     await perform(async () => {
-      await api("/auth/login", "POST", { password });
+      await api("/auth/login", "POST", { password, ...(username.trim() ? { username: username.trim() } : {}) });
       setPassword("");
+      setUsername("");
       await init();
     });
   }
-  const navigation: [Page, typeof House, string][] = [
+  const primaryNavigation: [Page, typeof House, string][] = [
     ["overview", House, "Overview"],
     ["work", SquareCheckBig, "My work"],
     ["integrations", Link2, "Integrations"],
@@ -255,6 +258,9 @@ export default function App() {
     ["applications", Layers3, session?.mode === "demo" ? "Demo applications" : "Connected apps"],
     ["settings", Settings, "Settings"],
   ];
+  const navigation = session?.mode === "live" && session.user.id !== "owner"
+    ? primaryNavigation.filter(([key]) => key === "work" || key === "settings")
+    : primaryNavigation;
   const pageHeading: Record<Page, [string, string]> = {
     overview: ["Something changed. You’re in control.", "Understand the impact. Approve the next move."],
     work: ["Your work, connected.", "A clear view of what matters and what happened."],
@@ -294,6 +300,14 @@ export default function App() {
             in perspective.
           </h1>
           <p>Sign in to your private operations workspace.</p>
+          <label htmlFor="username">Username <span className="field-note">(leave blank for the primary workspace)</span></label>
+          <input
+            id="username"
+            type="text"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
           <label htmlFor="password">Workspace password</label>
           <input
             id="password"
@@ -325,7 +339,7 @@ export default function App() {
         <a
           className="brand"
           href="#overview"
-          onClick={() => setPage("overview")}
+          onClick={() => setPage(session?.mode === "live" && session.user.id !== "owner" ? "work" : "overview")}
         >
           LIFEOS
           <span />
@@ -382,6 +396,9 @@ export default function App() {
                 void perform(async () => {
                   await api("/auth/logout", "POST", {});
                   setSession(null);
+                  setEvents([]);
+                  setEvent(null);
+                  setPage("overview");
                   setAuthNeeded(true);
                 })
               }
