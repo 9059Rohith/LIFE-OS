@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: lifeos
+    env: docker
+    plan: free
+    # Render will automatically use the Dockerfile in the repository root.
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: LIFEOS_MODE
+        value: live
+      - key: LIFEOS_ENVIRONMENT
+        value: production
+      - key: LIFEOS_USER_REGISTRATION
+        value: "false"
+      - key: LIFEOS_DATABASE_URL
+        # Set this manually in the Render dashboard using your Supabase connection string.
+        sync: false
+      - key: LIFEOS_AUTH_PASSWORD
+        # Set this manually in the Render dashboard (16+ characters).
+        sync: false
+      - key: LIFEOS_ENCRYPTION_KEY
+        # Set this manually in the Render dashboard (e.g. `openssl rand -base64 32`).
+        sync: false
+      - key: LIFEOS_ALLOWED_ORIGINS
+        # Update this manually in the Render dashboard to include your render.com URL once known.
+        value: '["http://localhost:5173","http://localhost:8000"]'
