@@ -362,6 +362,12 @@ def create_app(settings=None):
         async with engine.lock(owner):
             return await engine.execute(owner, engine.event(owner, id), request.url.path.endswith("retry"))
 
+    @app.post("/api/events/{id}/actions/{action_id}/reconcile")
+    async def reconcile_action(id: str, action_id: str, request: Request):
+        owner = security.require(request, True)
+        async with engine.lock(owner):
+            return await engine.reconcile(owner, engine.event(owner, id), action_id)
+
     @app.post("/api/events/{id}/cancel")
     async def cancel(id: str, request: Request):
         owner = security.require(request, True)

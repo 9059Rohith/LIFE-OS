@@ -135,7 +135,7 @@ WhatsApp requires interactive sign-in inside the desktop view for the bridge, or
 
 ## Safety, approvals and evidence
 
-The server ties approval to the event version and exact action arguments. Editing a target or payload requires fresh approval. Owner-scoped queries, session cookies, origin/CSRF checks and rate limits protect commands. Execution tracks per-action states and idempotency; retries must not silently duplicate completed actions. Dependency failures remain visible. Read-back verification is separate from a successful write response. Compensation can only undo supported reversible changes; a sent message cannot reliably be unsent.
+The server ties approval to the event version and exact action arguments. Editing a target or payload requires fresh approval. Owner-scoped queries, session cookies, origin/CSRF checks and rate limits protect commands. Execution tracks per-action states and idempotency; retries must not silently duplicate completed actions. Dependency failures remain visible. Read-back verification is separate from a successful write response. If a provider returned a durable result ID but the first read-back was inconclusive, **Recheck provider** repeats only the read-back and never sends again. A send without a provider result stays uncertain and requires manual review. Compensation can only undo supported reversible changes; a sent message cannot reliably be unsent.
 
 The audit chain detects record changes when checked against its stored chain, but is not an externally anchored immutable ledger. Demo authentication is intentionally convenient for localhost and must not be exposed publicly. [Security model and residual risks](docs/SECURITY.md) documents these boundaries.
 

@@ -160,6 +160,18 @@ export default function App() {
       }
     });
   }
+  async function reconcile(actionId: string) {
+    if (!event) return;
+    await perform(async () => {
+      const next = await api<LifeEvent>(
+        `/events/${event.id}/actions/${encodeURIComponent(actionId)}/reconcile`,
+        "POST",
+        {},
+      );
+      setEvent(next);
+      await refreshEvents();
+    });
+  }
   async function changeAction(args: Record<string, unknown>) {
     if (!event || !review) return;
     await perform(async () => {
@@ -596,6 +608,7 @@ export default function App() {
                   busy={busy}
                   onAction={(op, ids) => void operation(op, ids)}
                   onReview={setReview}
+                  onReconcile={(id) => void reconcile(id)}
                 />
               </div>
             </div>

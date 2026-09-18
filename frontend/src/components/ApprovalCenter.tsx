@@ -14,11 +14,13 @@ export function ApprovalCenter({
   busy,
   onAction,
   onReview,
+  onReconcile,
 }: {
   event: LifeEvent | null;
   busy: boolean;
   onAction: (operation: string, ids?: string[]) => void;
   onReview: (action: Action) => void;
+  onReconcile: (actionId: string) => void;
 }) {
   if (event && ["blocked", "clarification_required"].includes(event.status))
     return null;
@@ -140,6 +142,17 @@ export function ApprovalCenter({
               Review
               <ArrowUpRight size={13} />
             </button>
+            {a.status === "uncertain" && a.provider_result?.id && (
+              <button
+                className="button small"
+                disabled={busy}
+                onClick={() => onReconcile(a.id)}
+                aria-label={`Recheck ${a.application} delivery`}
+              >
+                <RotateCcw size={14} />
+                Recheck provider
+              </button>
+            )}
             {a.requires_approval &&
             ["pending", "awaiting_approval", "proposed", "failed"].includes(
               a.status,

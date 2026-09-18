@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("desktop dock separates an uncertain send from a verified receipt", async ({ page }) => {
+  let rechecked = false;
   await page.addInitScript(() => {
     const calls: { selected: string[]; viewport?: { width: number; height: number } } = { selected: [] };
     Object.assign(window, {
@@ -15,7 +16,7 @@ test("desktop dock separates an uncertain send from a verified receipt", async (
   await page.route("**/api/session", (route) => route.fulfill({ json: {
     user: { id: "owner", name: "Workspace" }, csrf_token: "test", mode: "live", voice_available: false,
   } }));
-  await page.route("**/api/events", (route) => route.fulfill({ json: [{
+  const event = {
     id: "event", title: "Flight time changed", event_type: "flight_change", source: "gmail",
     source_ref: { application: "gmail", record_id: "source-message-1" },
     status: "partial_failure", created_at: "2026-09-17T10:00:00Z", version: 1,
@@ -25,9 +26,21 @@ test("desktop dock separates an uncertain send from a verified receipt", async (
       reason: "Known contact", target: "Family", arguments: { contact: "Family", body: "Flight changed" },
       risk: "high", status: "uncertain", requires_approval: true, reversible: false,
       dependencies: [], evidence: { verified: false }, error: "Delivery could not be confirmed",
-      arguments_hash: "approved-hash",
+      arguments_hash: "approved-hash", provider_result: { id: "provider-message-1", contact: "Family", body: "Flight changed" },
     }],
+  };
+  await page.route("**/api/events", (route) => route.fulfill({ json: [{
+    ...event,
+    status: rechecked ? "resolved" : event.status,
+    actions: rechecked ? [{ ...event.actions[0], status: "verified", evidence: { verified: true } }] : event.actions,
   }] }));
+  await page.route("**/api/events/event/actions/send/reconcile", (route) => {
+    rechecked = true;
+    return route.fulfill({ json: {
+      ...event, status: "resolved",
+      actions: [{ ...event.actions[0], status: "verified", evidence: { verified: true } }],
+    } });
+  });
   await page.goto("/desktop.html");
   await expect(page.getByText("source-message-1")).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Verified actions" })).toHaveAttribute("aria-valuenow", "0");
@@ -42,6 +55,9 @@ test("desktop dock separates an uncertain send from a verified receipt", async (
   expect(calls.selected).toContain("whatsapp");
   expect(calls.viewport?.width).toBeGreaterThan(300);
   expect(calls.viewport?.height).toBeGreaterThan(180);
+  await page.getByRole("button", { name: "Recheck provider" }).click();
+  await expect(page.getByRole("progressbar", { name: "Verified actions" })).toHaveAttribute("aria-valuenow", "1");
+  expect(rechecked).toBe(true);
 });
 
 test("desktop dock discovers a newly signed-in workspace", async ({ page }) => {

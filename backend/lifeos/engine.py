@@ -198,6 +198,73 @@ class Engine:
         ):
             raise HTTPException(409, "STALE_APPROVAL_ERROR: review and approve the current plan")
 
+    @staticmethod
+    def provider_result(action, result):
+        """Keep only the fields needed for a later read-only provider check."""
+        fields = {
+            "calendar": ("id", "calendar_id", "cancelled", "expected", "preserved"),
+            "gmail": ("id", "kind", "message_id", "attachment_sha256"),
+            "discord": ("id", "channel_id"),
+            "whatsapp": ("id", "contact", "body", "idempotency_key"),
+        }.get(action["application"], ())
+        if not isinstance(result, dict) or not isinstance(result.get("id"), str):
+            return None
+        return {key: copy.deepcopy(result[key]) for key in fields if key in result}
+
+    @staticmethod
+    def summarize(event):
+        if event["status"] != "cancelled":
+            event["status"] = (
+                "resolved"
+                if all(a["status"] in ["verified", "rejected"] for a in event["actions"])
+                else "partial_failure"
+                if any(a["status"] in ["failed", "uncertain", "blocked_dependency"] for a in event["actions"])
+                else "awaiting_approval"
+            )
+        verified = sum(a["status"] == "verified" for a in event["actions"])
+        rejected = sum(a["status"] == "rejected" for a in event["actions"])
+        failed = sum(a["status"] in ["failed", "blocked_dependency"] for a in event["actions"])
+        uncertain = sum(a["status"] == "uncertain" for a in event["actions"])
+        waiting = sum(a["status"] in ["pending", "awaiting_approval", "approved"] for a in event["actions"])
+        event["summary"] = (
+            f"{verified} actions verified, {rejected} rejected, {failed} failed or blocked, {uncertain} uncertain, {waiting} awaiting execution or approval."
+        )
+        if uncertain:
+            event["summary"] += " Uncertain deliveries require manual provider review before any retry."
+        if event["status"] == "cancelled":
+            event["summary"] = (
+                "Execution cancelled. " + event["summary"] + " Completed deliveries remain delivered."
+            )
+
+    async def reconcile(self, owner, event, action_id):
+        """Read the provider again using a saved result; never repeat the write."""
+        action = next((item for item in event["actions"] if item["id"] == action_id), None)
+        if action is None:
+            raise HTTPException(404, "Action not found")
+        result = action.get("provider_result")
+        if (
+            self.settings.mode != "live"
+            or event.get("simulation")
+            or action["status"] != "uncertain"
+            or not isinstance(result, dict)
+            or not result.get("id")
+        ):
+            raise HTTPException(409, "No provider result is available for read-only reconciliation")
+        try:
+            evidence = await asyncio.wait_for(self.providers.verify(owner, action, copy.deepcopy(result)), 15)
+        except Exception:
+            self.log(owner, event, "verification_failed", "Provider read-back unavailable; manual review required", action["application"])
+            return self.save(owner, event)
+        action["evidence"] = evidence
+        if evidence.get("verified") is True and evidence.get("provider_id") == result["id"]:
+            action["status"] = "verified"
+            action["error"] = None
+            self.summarize(event)
+            self.log(owner, event, "verified", "Previously uncertain action confirmed by provider read-back", action["application"])
+        else:
+            self.log(owner, event, "verification_failed", "Provider still does not confirm the action; manual review required", action["application"])
+        return self.save(owner, event)
+
     async def execute(self, owner, event, retry=False):
         if event["simulation"] or event["status"] in [
             "blocked",
@@ -300,6 +367,10 @@ class Engine:
                     if result.get("compensation_journal"):
                         a["compensation_journal"] = result["compensation_journal"]
                         self.save(owner, event)
+                    receipt = self.provider_result(a, result)
+                    if receipt:
+                        a["provider_result"] = receipt
+                        self.save(owner, event)
                     evidence = await asyncio.wait_for(self.providers.verify(owner, a, result), 15)
                 a["evidence"] = evidence
                 a["status"] = "verified" if evidence.get("verified") else "uncertain"
@@ -340,28 +411,7 @@ class Engine:
                 )
             self.save(owner, event)
             await asyncio.sleep(0)
-        if event["status"] != "cancelled":
-            event["status"] = (
-                "resolved"
-                if all(a["status"] in ["verified", "rejected"] for a in event["actions"])
-                else "partial_failure"
-                if any(a["status"] in ["failed", "uncertain", "blocked_dependency"] for a in event["actions"])
-                else "awaiting_approval"
-            )
-        verified = sum(a["status"] == "verified" for a in event["actions"])
-        rejected = sum(a["status"] == "rejected" for a in event["actions"])
-        failed = sum(a["status"] in ["failed", "blocked_dependency"] for a in event["actions"])
-        uncertain = sum(a["status"] == "uncertain" for a in event["actions"])
-        waiting = sum(a["status"] in ["pending", "awaiting_approval", "approved"] for a in event["actions"])
-        event["summary"] = (
-            f"{verified} actions verified, {rejected} rejected, {failed} failed or blocked, {uncertain} uncertain, {waiting} awaiting execution or approval."
-        )
-        if uncertain:
-            event["summary"] += " Uncertain deliveries require manual provider review before any retry."
-        if event["status"] == "cancelled":
-            event["summary"] = (
-                "Execution cancelled. " + event["summary"] + " Completed deliveries remain delivered."
-            )
+        self.summarize(event)
         self.log(
             owner,
             event,

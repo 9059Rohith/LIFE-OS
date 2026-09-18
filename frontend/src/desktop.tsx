@@ -352,6 +352,7 @@ function DesktopApp() {
                             <div className="desktop-action-buttons">
                               <button type="button" onClick={() => focusAction(action)}>View app <ExternalLink size={13} /></button>
                               {action.status === "awaiting_approval" && <button type="button" disabled={loading} onClick={() => void operate("approve", { action_ids: [action.id], version: current.version })}>Approve this action</button>}
+                              {action.status === "uncertain" && action.provider_result?.id && <button type="button" disabled={loading} onClick={() => void operate(`actions/${encodeURIComponent(action.id)}/reconcile`)}>Recheck provider</button>}
                             </div>
                           </div>
                         )}

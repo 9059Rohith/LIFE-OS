@@ -14,6 +14,7 @@ export interface Action {
   reversible: boolean;
   dependencies: string[];
   evidence: Record<string, unknown> | null;
+  provider_result?: { id: string; [key: string]: unknown };
   compensation_status?: string;
   compensation_evidence?: Record<string, unknown>;
   compensation_error?: string;
