@@ -33,7 +33,7 @@ class LoginInput(Strict):
 
     @field_validator("username")
     @classmethod
-    def username_is_safe(cls, value):
+    def username_is_safe(cls, value: str | None) -> str | None:
         if value is not None and not re.fullmatch(r"[a-z][a-z0-9_]{2,31}", value):
             raise ValueError("Username must use lowercase letters, numbers, or underscores")
         return value
