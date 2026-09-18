@@ -1,6 +1,7 @@
-from typing import Literal, Self
+from typing import Literal, Self, Any
+import json
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 
 
 class Settings(BaseSettings):
@@ -37,6 +38,19 @@ class Settings(BaseSettings):
     approval_seconds: int = 600
     session_seconds: int = 86400
     rate_limit: int = 120
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [x.strip() for x in v.split(",") if x.strip()]
+        return v
 
     @model_validator(mode="after")
     def guard(self) -> Self:
