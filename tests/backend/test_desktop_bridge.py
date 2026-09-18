@@ -29,6 +29,55 @@ async def test_desktop_bridge_delivers_one_job_and_rejects_replay():
 
 
 @pytest.mark.asyncio
+async def test_desktop_bridge_serializes_jobs_across_concurrent_pollers():
+    bridge = DesktopBridge()
+    first_poll = asyncio.create_task(bridge.next_job(1))
+    await asyncio.sleep(0)
+    first_request = asyncio.create_task(bridge.request("send", {"contact": "Allowed chat"}, 1))
+    first_job = await first_poll
+
+    second_poll = asyncio.create_task(bridge.next_job(0.05))
+    second_request = asyncio.create_task(bridge.request("read", {"contact": "Allowed chat"}, 1))
+    assert await second_poll is None
+    assert not second_request.done()
+
+    assert bridge.complete(first_job["id"], {"ok": True, "result": {"id": "sent"}})
+    assert await first_request == {"id": "sent"}
+    second_job = await bridge.next_job(1)
+    assert second_job["operation"] == "read"
+    assert bridge.complete(second_job["id"], {"ok": True, "result": {"items": []}})
+    assert await second_request == {"items": []}
+    bridge.close()
+
+
+@pytest.mark.asyncio
+async def test_timed_out_send_blocks_new_dispatch_until_desktop_reports_completion():
+    bridge = DesktopBridge()
+    first_poll = asyncio.create_task(bridge.next_job(1))
+    await asyncio.sleep(0)
+    send = asyncio.create_task(bridge.request("send", {"contact": "Allowed chat"}, 0.02))
+    first_job = await first_poll
+    with pytest.raises(ProviderError) as failure:
+        await send
+    assert failure.value.uncertain is True
+
+    with pytest.raises(ProviderError) as blocked:
+        await bridge.request("read", {"contact": "Allowed chat"}, 0.05)
+    assert blocked.value.code == "BROWSER_UNAVAILABLE"
+    assert await bridge.next_job(0.05) is None
+
+    assert not bridge.complete(first_job["id"], {"ok": True, "result": {"id": "sent"}})
+    second_poll = asyncio.create_task(bridge.next_job(1))
+    await asyncio.sleep(0)
+    read = asyncio.create_task(bridge.request("read", {"contact": "Allowed chat"}, 1))
+    second_job = await second_poll
+    assert second_job["operation"] == "read"
+    assert bridge.complete(second_job["id"], {"ok": True, "result": {"items": []}})
+    assert await read == {"items": []}
+    bridge.close()
+
+
+@pytest.mark.asyncio
 async def test_desktop_bridge_fails_closed_when_offline_or_reply_is_lost():
     bridge = DesktopBridge()
     with pytest.raises(ProviderError, match="Open the LIFEOS desktop"):
