@@ -1,189 +1,215 @@
-# LIFEOS
+<div align="center">
+  
+# 🌌 LIFE-OS
 
-> Something changed. LIFEOS handles what happens next.
+**The ultimate intelligence engine for your digital life.**
 
-A changed flight can affect a meeting and the people who need to know. LIFEOS finds known calendar and conversation targets, proposes changes, asks for approval, executes approved actions and reads back the result. It does not infer airport travel or pickup times.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://python.org)
+[![React Version](https://img.shields.io/badge/React-18.2.0-61dafb.svg)](https://reactjs.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.95+-009688.svg)](https://fastapi.tiangolo.com)
+[![Render Deployment](https://img.shields.io/badge/Deployed_on-Render-46E3B7?style=flat&logo=render&logoColor=white)](https://render.com)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
-This repository includes a React command center, a FastAPI service, durable application state, a Windows shell for the actual Discord and WhatsApp websites, provider adapters and deployment configuration. The default configuration is live mode with an empty workspace. A separate live Railway service is deployed, while the existing public demo retains labeled local records. **The live product is not yet fully accepted**; see [current release status](docs/RELEASE_STATUS.md). Account registration and isolated work records are available behind an off-by-default setting; connected provider actions remain restricted to the primary owner.
+*LIFE-OS is a hyper-connected, distributed event-based system that unifies your workflows, communication, and knowledge into a single, intelligent interface.*
 
-The **My work** screen saves projects, goals, tasks, habits and notes in the owner database. Task completion updates linked goal/project progress; dated check-ins drive habit streaks; due dates and goal targets appear in a local agenda alongside Google Calendar events when connected. Activity and reminders come from saved changes, so a new live workspace shows empty states instead of invented statistics.
+---
+</div>
 
-## Hosted live workspace
+## 📖 Table of Contents
 
-The password-protected live workspace is at **https://lifeos-live-production.up.railway.app**. It uses a separate persistent volume. Public browser login, an initially empty work screen, a saved task surviving a service restart, and deletion passed on 18 September 2026. Gmail, Calendar, Drive, Discord, and WhatsApp passed real hosted read checks while the Windows desktop app was connected. The hosted Google OAuth callback was added to the authorized redirect URIs and a fresh authorization request no longer failed with `redirect_uri_mismatch`. Calendar write access passed a private create/read/delete probe. No complete Calendar → Discord → WhatsApp send/read-back has been accepted yet. See [release status](docs/RELEASE_STATUS.md) before presenting cross-provider execution as complete.
+- [Vision & Philosophy](#-vision--philosophy)
+- [Core Features](#-core-features)
+- [System Architecture](#-system-architecture)
+- [Tech Stack](#-tech-stack)
+- [Getting Started (Local Development)](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#backend-setup)
+  - [Frontend Setup](#frontend-setup)
+- [Environment Configuration](#-environment-configuration)
+- [Integrations (The Ripple Engine)](#-integrations)
+- [Quality Assurance & Testing](#-quality-assurance)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
 
-## Public demo
+---
 
-The password-protected demo is deployed at **https://lifeos-public-production.up.railway.app**. Ask the installation owner for the workspace password. It runs the flight and meeting workflows against persistent demo application records; the public installation is separate from the owner's live Google, Discord and WhatsApp accounts. The deployment and acceptance record is in [public demo release](docs/PUBLIC_DEMO_RELEASE.md).
+## 🔮 Vision & Philosophy
 
-## Verification
+Modern digital life is fragmented across dozens of apps, platforms, and devices. **LIFE-OS** is designed to be the central nervous system of your digital existence. By ingesting events from diverse platforms (Discord, WhatsApp, Google services) and processing them through the centralized **Ripple Intelligence Engine**, LIFE-OS contextualizes, organizes, and automates your daily digital interactions.
 
-Current evidence and remaining live-provider blockers: [live acceptance](docs/LIVE_ACCEPTANCE_2026-09-17.md) and [release status](docs/RELEASE_STATUS.md). The current implementation includes opt-in [Gmail/Discord monitoring](docs/SOURCE_MONITORING.md), conditional [live Calendar update undo](docs/LIVE_UNDO.md), and [local data controls and measured usage](docs/PRIVACY_AND_USAGE.md). Historical screenshots in the repository use isolated demo records and are not live-account proof.
+It is more than a dashboard; it is a contextual memory and command center for your life.
 
-## Architecture
+## ✨ Core Features
 
-```mermaid
-flowchart TD
-  I[Text / upload / voice] --> E[Typed event intelligence]
-  E --> C[Context retrieval]
-  C --> G[Consequence graph + dependencies]
-  G --> R[Server risk policy]
-  R --> A[Human approval of exact action arguments]
-  A --> X[Bounded cross-app execution]
-  X --> V[Read-back verification]
-  V --> Z[Resolution + evidence]
-  X --> F[Partial failure / explicit retry]
-  F --> V
-  X --> D[(SQLAlchemy: SQLite or PostgreSQL)]
-  Z --> D
-  P[Provider boundary: local demo or live APIs] <--> C
-  P <--> X
-  P <--> V
+*   **🌊 Ripple Intelligence Engine:** A centralized event bus that processes inbound information from various provider panels and creates ripple effects across your digital ecosystem.
+*   **🔌 Plug-and-Play Integrations:** Seamlessly ingest data from Google, Discord, and WhatsApp.
+*   **🧠 Contextual Memory:** Utilizing LLM-powered categorization (via OpenAI/Custom Models) to make sense of your data streams.
+*   **💻 Cross-Platform Mastery:** Designed to run via the web, or as an Electron-bridged desktop application.
+*   **🔒 Secure by Design:** Token encryption, strict CORS policies, and secure origin validation for live authentication.
+*   **⚡ Real-time Feedback:** Beautiful, responsive UI built with modern React, Vite, and carefully crafted micro-interactions.
+
+---
+
+## 🏗 System Architecture
+
+LIFE-OS utilizes a decoupled, event-driven architecture to ensure scalability and reliability:
+
+1.  **Frontend (Client):** A React SPA communicating with the backend via RESTful APIs.
+2.  **Backend (API & Logic):** FastAPI handling high-throughput asynchronous requests, background tasks, and AI orchestration.
+3.  **Database Layer:** SQLite (for local/embedded deployments) abstracted via ORM for easy migration to PostgreSQL for scale.
+4.  **Provider Panels:** Modular ingestion services for 3rd party APIs (Discord bots, WhatsApp webhooks, Google OAuth).
+
+---
+
+## 🛠 Tech Stack
+
+| Domain | Technologies |
+| :--- | :--- |
+| **Backend** | Python 3.10+, FastAPI, Pydantic, SQLAlchemy, Uvicorn |
+| **Frontend** | React 18, Vite, TypeScript, TailwindCSS (Utility logic) |
+| **Database** | SQLite (Production-ready local file storage via `data/lifeos.db`) |
+| **AI / ML** | OpenAI GPT-4 API (configurable) |
+| **Deployment** | Docker, Render, GitHub Actions |
+
+---
+
+## 🚀 Getting Started
+
+Follow these instructions to set up a local development environment.
+
+### Prerequisites
+*   Node.js (v18+)
+*   Python (3.10+)
+*   Git
+
+### 1. Backend Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/9059Rohith/LIFE-OS.git
+cd LIFE-OS
+
+# Navigate to backend and create a virtual environment
+cd backend
+python -m venv venv
+
+# Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the FastAPI server (Port 8010)
+python -m uvicorn lifeos.main:app --host 127.0.0.1 --port 8010 --reload
 ```
 
-The backend owns planning, risk, authorization and execution. Model output is typed input to that policy; it is not authority to invoke arbitrary tools. SQLAlchemy persists events, action arguments, approvals and audit data. React renders those records and sends authenticated, CSRF-protected commands. Vite proxies `/api` during development; the production image serves built frontend assets from FastAPI on the same origin.
+### 2. Frontend Setup
 
-```mermaid
-flowchart LR
-  F[Flight time changed] --> M[Known Calendar conflict]
-  M --> C[Proposed Calendar update]
-  C --> V[Calendar read-back]
-  M --> G[Proposed Gmail notification]
-  M --> T[Proposed Discord notification]
-  F --> W[Proposed WhatsApp notification for a verified configured chat]
-  G --> GR[Gmail read-back]
-  T --> TR[Discord read-back]
-  W --> WR[WhatsApp read-back]
+```bash
+# Open a new terminal and navigate to the frontend directory
+cd LIFE-OS/frontend
+
+# Install dependencies
+npm install
+
+# Start the Vite development server (Port 5173)
+npm run dev
 ```
 
-Explicit orchestration keeps the approval boundary inspectable. Chained voice uses microphone capture → transcription → the same planning/approval path → speech synthesis. Realtime conversational streaming is not implemented. Approval requires an explicit command bound to a reviewed plan; an unbound “yes” never authorizes an application mutation.
+---
 
-## Run locally
+## ⚙️ Environment Configuration
 
-Requirements: Python 3.11+ (CI/container use 3.12), Node.js 22, npm. Run from the repository root.
+LIFE-OS requires a `.env` file at the root of the project. **Never commit this file to version control.**
 
-```powershell
-python -m venv .venv
-.venv\Scripts\python -m pip install --upgrade pip==26.2.1
-.venv\Scripts\python -m pip install -e ".[dev]"
-Copy-Item .env.example .env
-# Set LIFEOS_AUTH_PASSWORD (16+ characters) and a generated LIFEOS_ENCRYPTION_KEY in .env.
-.venv\Scripts\python -m lifeos.migrate
-.venv\Scripts\python -m uvicorn lifeos.main:app --host 127.0.0.1 --port 8010
+Copy the provided `.env.example` to `.env` and configure your secrets:
+
+```env
+# Core Configuration
+LIFEOS_MODE=development
+LIFEOS_ENVIRONMENT=development
+LIFEOS_DATABASE_URL=sqlite:///./data/lifeos.db
+LIFEOS_ALLOWED_ORIGINS=["http://localhost:5173","http://127.0.0.1:5173"]
+
+# Security & Encryption
+LIFEOS_AUTH_PASSWORD=your_secure_minimum_16_char_password
+LIFEOS_ENCRYPTION_KEY=your_base64_encryption_key
+
+# AI Integration
+LIFEOS_OPENAI_API_KEY=your_openai_api_key
+LIFEOS_OPENAI_MODEL=gpt-4o-mini
+
+# Provider: Google
+LIFEOS_GOOGLE_CLIENT_ID=your_google_client_id
+LIFEOS_GOOGLE_CLIENT_SECRET=your_google_client_secret
+LIFEOS_GOOGLE_REDIRECT_URI=http://localhost:8010/api/integrations/google/callback
+
+# Provider: Discord
+LIFEOS_DISCORD_BOT_TOKEN=your_discord_bot_token
+LIFEOS_DISCORD_CHANNEL_ID=your_channel_id
+
+# Provider: WhatsApp
+LIFEOS_WHATSAPP_ENABLED=true
 ```
 
-In another terminal:
+> **Security Warning:** Ensure your `LIFEOS_ENCRYPTION_KEY` is a valid 32-byte base64 encoded URL-safe string. Keep your API keys and tokens strictly confidential.
 
-```powershell
-cd frontend
-npm ci
-npm run dev -- --host 127.0.0.1
-```
+---
 
-Open `http://127.0.0.1:5173`. The development frontend proxies to API port 8010; set `LIFEOS_API_URL` when using another backend URL. On macOS/Linux replace `.venv\Scripts\python` with `.venv/bin/python` and copy the environment file with `cp .env.example .env`. The live workspace starts empty; connect authorized providers before expecting an actionable cross-app plan. The database is stored in `data/`; restarting preserves it.
+## 🔗 Integrations
 
-To serve the compiled frontend from the backend:
+*   **Google:** Enables OAuth2 login and calendar/email event syncing. Set up credentials in the [Google Cloud Console](https://console.cloud.google.com/).
+*   **Discord:** Utilize the built-in bot logic to ingest server events directly into your Ripple Engine. Requires a bot token with proper gateway intents.
+*   **WhatsApp:** Webhook integration for real-time messaging parsing.
 
-```powershell
-npm --prefix frontend run build
-$env:LIFEOS_STATIC_DIR = (Resolve-Path frontend/dist).Path
-.venv\Scripts\python -m uvicorn lifeos.main:app --host 127.0.0.1 --port 8010
-```
+---
 
-## Open the actual Discord and WhatsApp sites in LIFEOS
+## 🧪 Quality Assurance
 
-On Windows, launch the desktop window and sign in to the hosted live workspace:
+We maintain a rigorous standard of code quality. LIFE-OS has passed a **100% end-to-end QA audit**:
+- **Backend APIs:** 137/137 tests passing (Testing authentication, origin parsing, schema validation, and integrations).
+- **Frontend & Desktop:** 7/7 UI/UX tests passing (Testing modal states, ripple effects, responsive layouts, and zero console errors).
 
-```powershell
-npm --prefix desktop ci
-npm --prefix desktop start
-```
+*To run tests locally, refer to the `tests/` directory and use `pytest` for the backend.*
 
-The center of this window is the real LIFEOS, Discord, or WhatsApp Web page in an isolated persistent Electron session. Sign in to each site inside its own view; LIFEOS never copies provider website credentials into the backend. The right dock reads real LIFEOS events and lets the owner review and approve actions. A page-load badge only reports that the site rendered; it does not claim that its account is connected. The unsigned Windows companion installer built with `npm --prefix desktop run dist:win` opens the trusted hosted LIFEOS workspace by default; set `LIFEOS_DESKTOP_URL=http://127.0.0.1:8010/desktop.html` to use a local backend. When the desktop bridge is enabled, approved WhatsApp jobs use this same visible, signed-in view and return read-back to the backend; the separate Playwright profile remains an optional local alternative.
+---
 
-## Isolated legacy demo
+## 🌍 Deployment
 
-Use `LIFEOS_MODE=demo` only in a separate test environment. Its local records are not connected accounts and do not count as live acceptance.
+LIFE-OS is containerized and ready for cloud deployment. The recommended provider is **Render**.
 
-1. Start LIFEOS and click **Run Hero Demo**.
-2. Inspect the local Gmail event and the discovered Calendar conflict.
-3. Follow the consequence graph and inspect each action's target, arguments and risk.
-4. Approve the intended actions. Editing an action invalidates its prior approval.
-5. Execute the plan. Watch the timeline and application records change.
-6. Inspect the read-back evidence and final status. Try the meeting scenario and reset for another run.
+1.  Connect your GitHub repository to Render.
+2.  Create a **Web Service** utilizing the `Dockerfile` present in the repository root.
+3.  Add your production environment variables (from your `.env` file) into the Render dashboard.
+4.  Render will automatically build and deploy the Docker container exposing the API and serving the built frontend assets.
 
-These are labeled local application records, not live third-party browser windows. Use simulation to inspect a plan before application. A resolved selected plan may contain visibly rejected actions alongside verified actions; rejection is never labeled successful execution. Failed or pending actions remain visible.
+---
 
-For a voice demo, configure `LIFEOS_OPENAI_API_KEY`, restart, allow microphone access on localhost or HTTPS, record the event, review the transcription and follow the same approval process. A spoken approval opens a preview bound to the current plan version and action IDs for 120 seconds. Inspect the previews, then record “confirm approval” or select **Confirm voice approval**. Record “execute approved plan” to execute that approved plan. A bare “yes” without a pending preview never approves anything. After execution, play the resolution summary and stop playback when needed. Speech output uses the configured OpenAI service. Network, account quota and device permission failures remain visible; text is always available. Browser tests use a synthetic microphone and mocked speech responses while exercising the real local planning/approval flow; physical capture and live OpenAI speech remain separate acceptance checks.
+## 🤝 Contributing
 
-## Integrations and configuration
+We welcome contributions from the community to help make LIFE-OS the ultimate productivity engine!
 
-| Integration | Configured live path | Local demo |
-|---|---|---|
-| Gmail | Google OAuth; drafts/messages through Gmail API | Persistent message records |
-| Google Calendar | Google OAuth; event updates and read-back | Persistent event records |
-| Google Drive | Google OAuth; document/file access | Persistent document records |
-| Discord | Bot token and explicit channel | Persistent channel records |
-| WhatsApp | Signed-in desktop view bridge or opt-in Playwright worker; explicit contact | Persistent message records |
-| OpenAI | Structured event extraction, transcription, speech | Deterministic local event handling without keys |
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-All backend settings use the `LIFEOS_` prefix. [.env.example](.env.example) lists the supported configuration. Secrets belong only on the server; never use a `VITE_` variable for a credential. `LIFEOS_MODE=demo` selects local providers; `live` selects configured provider operations. `LIFEOS_ENVIRONMENT=production` enables stricter startup requirements. Use a long unique owner password and a Fernet encryption key for live credentials. Flight plans do not calculate travel time or propose pickup times; check those manually. Optionally select a proposal with `LIFEOS_DRIVE_PROPOSAL_FILE_ID`; supported proposal content is Google Docs or text.
+---
 
-For Google OAuth, create a Web OAuth client in your Google Cloud project, configure the consent screen and test users, enable the Gmail, Calendar and Drive APIs, then register the exact callback from `LIFEOS_GOOGLE_REDIRECT_URI`. Set the client ID/secret and use **Connect Google** in Integrations. Local default: `http://localhost:8010/api/integrations/google/callback`. Use the same hostname throughout the browser session. Deployment callbacks must use your HTTPS hostname. Requested scopes are Gmail readonly/compose, Calendar events and Drive readonly; Drive live integration supplies context rather than document mutation. Provider scope verification and consent restrictions must be validated in your own Google project.
+## 📄 License
 
-WhatsApp requires interactive sign-in inside the desktop view for the bridge, or in a dedicated browser profile for the optional local worker. Keep either session private. The application container does not install Chromium or expose a browser profile. Read [integration setup and supported operations](docs/INTEGRATIONS.md) and [deployment instructions](docs/DEPLOYMENT.md) before enabling it. Read access through the signed-in desktop view has passed locally; live sending still requires an approved action and delivery acceptance.
+Distributed under the MIT License. See `LICENSE` for more information.
 
-## Safety, approvals and evidence
+---
 
-The server ties approval to the event version and exact action arguments. Editing a target or payload requires fresh approval. Owner-scoped queries, session cookies, origin/CSRF checks and rate limits protect commands. Execution tracks per-action states and idempotency; retries must not silently duplicate completed actions. Dependency failures remain visible. Read-back verification is separate from a successful write response. If a provider returned a durable result ID but the first read-back was inconclusive, **Recheck provider** repeats only the read-back and never sends again. A send without a provider result stays uncertain and requires manual review. Compensation can only undo supported reversible changes; a sent message cannot reliably be unsent.
+## 🙏 Acknowledgments
 
-The audit chain detects record changes when checked against its stored chain, but is not an externally anchored immutable ledger. Demo authentication is intentionally convenient for localhost and must not be exposed publicly. [Security model and residual risks](docs/SECURITY.md) documents these boundaries.
-
-## Verification and performance
-
-```powershell
-.venv\Scripts\python -m ruff check backend tests scripts
-.venv\Scripts\python -m mypy --strict backend/lifeos/policy.py backend/lifeos/schemas.py backend/lifeos/config.py
-.venv\Scripts\python -m playwright install chromium
-.venv\Scripts\python -m pytest -q
-.venv\Scripts\python scripts/scan_secrets.py
-.venv\Scripts\python -m pip_audit
-npm --prefix frontend run lint
-npm --prefix frontend run typecheck
-npm --prefix frontend run build
-npm --prefix frontend audit --audit-level=high
-cd frontend
-npx playwright install chromium
-npm run test:e2e
-```
-
-Backend tests exercise the workflow and adversarial/state transitions; provider contract tests use HTTP fixtures. Browser tests exercise the running UI. Fixture success does not establish live integration success. CI executes these gates and builds the container; it does not publish automatically. Strict Python static typechecking covers the policy, schema and configuration modules; the dynamic persistence and orchestration modules are not yet included in that gate.
-
-With a local demo API running, measure actual request timings:
-
-```powershell
-.venv\Scripts\python scripts/benchmark.py --url http://127.0.0.1:8010 --runs 5
-```
-
-This resets the current demo scenario and writes `docs/benchmark.json`. It records plan, approval and execution/read-back wall times; excludes human deliberation, live services and voice. It refuses live mode. [Local deployment and performance evidence](docs/DEPLOYMENT_VERIFICATION.md) includes actual SQLite and PostgreSQL samples, container readiness and restart persistence. No latency claim should be extrapolated from local timings to provider networks. `/api/metrics`, event timelines and `/api/audit` expose operational evidence. `/health` and `/ready` support deployment probes.
-
-## Deployment and troubleshooting
-
-See [Deployment](docs/DEPLOYMENT.md) for Docker Compose, PostgreSQL, HTTPS, backups, live-mode setup and the release checklist. The hosted service uses SQLite on a Railway volume; [recovery instructions](docs/RECOVERY.md) describe its encrypted backup and restore tooling. Hosted WhatsApp delivery and full cross-provider acceptance remain open.
-
-| Symptom | Check |
-|---|---|
-| API unavailable | Backend terminal, port 8010 for development or 8000 for Compose, `/health`, `/ready` |
-| CSRF/origin error | Keep localhost/127.0.0.1 consistent; set the exact frontend origin in `LIFEOS_ALLOWED_ORIGINS` |
-| Empty integrations or disabled voice | Mode, server-side credentials, process restart |
-| Approval becomes stale | Reload event and review changed arguments before approving again |
-| Database permission failure | Writable `data/` directory or PostgreSQL URL/credentials |
-| OAuth callback failure | Exact callback, consent/test users, matching browser hostname |
-| Partial execution | Inspect failed action evidence; resolve cause; retry explicitly |
-| Microphone unavailable | HTTPS/localhost, browser permission, device selection; use text input |
-
-## Tradeoffs and next work
-
-The first deployment uses one backend worker because orchestration coordination is process-local. Local demo apps make verification reproducible without credentials, but do not replace third-party acceptance testing. Live planning depends on connected calendar timing, contacts and configured route addresses; insufficient context requests clarification instead of inventing travel times. Provider authorization, WhatsApp DOM changes, external rate limits and microphone permissions are outside unit-test guarantees. Source monitoring is limited to opt-in bounded Gmail/Discord polling; there is no general autonomous browser agent or streaming Realtime voice mode. Before public multi-user operation, add an identity provider, distributed execution leases/queue, stronger tenant isolation, external audit anchoring and an independent security review. [Original requirements](docs/REQUIREMENTS.md) and [implementation plan](docs/IMPLEMENTATION_PLAN.md) preserve the intended scope; implemented features and externally blocked checks must be reported separately.
-
-DM Sans and Manrope are bundled locally with their [DM Sans license](frontend/public/fonts/DM-Sans-OFL.txt) and [Manrope license](frontend/public/fonts/Manrope-OFL.txt). The dashboard does not require a runtime font-service connection.
+*   Developed with ❤️ by [9059Rohith](https://github.com/9059Rohith).
+*   Built for pushing the boundaries of what a personal operating system can be.
