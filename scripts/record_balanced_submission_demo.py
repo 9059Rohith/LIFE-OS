@@ -18,7 +18,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 DOWNLOADS = Path.home() / "Downloads"
 DOWNLOADS.mkdir(parents=True, exist_ok=True)
 BASE_URL = os.environ.get("LIFEOS_CAPTURE_URL", "http://127.0.0.1:5175")
-FINAL_MP4 = DOWNLOADS / "LIFEOS_BALANCED_2M30_HACKATHON_DEMO.mp4"
+FINAL_MP4 = DOWNLOADS / "LIFEOS_BALANCED_2M30_HACKATHON_DEMO_FINAL.mp4"
 FINAL_SRT = DOWNLOADS / "LIFEOS_BALANCED_2M30_HACKATHON_DEMO.srt"
 FINAL_SCRIPT = DOWNLOADS / "LIFEOS_BALANCED_2M30_HACKATHON_DEMO_SCRIPT.md"
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
@@ -248,7 +248,7 @@ def provider_event() -> dict[str, object]:
 
 
 def install_provider_mock(page: Page) -> list[str]:
-    patterns = ["**/api/session", "**/api/events", "**/api/integrations", "**/api/apps/*"]
+    patterns = ["**/api/session", "**/api/events", "**/api/integrations", "**/api/apps/**"]
     event = provider_event()
     integrations = [
         {"id": name, "name": label, "status": "read_access_verified", "mode": "demo", "description": "Isolated provider-screen record for this recording."}
@@ -410,6 +410,8 @@ def mux(raw: Path) -> None:
         [
             FFMPEG,
             "-y",
+            "-ss",
+            "8",
             "-i",
             str(raw),
             "-i",
@@ -434,6 +436,8 @@ def mux(raw: Path) -> None:
             "18",
             "-pix_fmt",
             "yuv420p",
+            "-vf",
+            "tpad=stop_mode=clone:stop_duration=1",
             "-c:a",
             "aac",
             "-b:a",
@@ -466,4 +470,5 @@ def main() -> None:
     print(f"Script: {FINAL_SCRIPT}")
 
 
-i
+if __name__ == "__main__":
+    main()

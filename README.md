@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://lifeos-live-production.up.railway.app"><strong>Live workspace</strong></a>
   &nbsp;&middot;&nbsp;
-  <a href="https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm"><strong>Demo video (3:59)</strong></a>
+  <a href="https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-balanced-demo-final.mp4"><strong>Demo video (2:30)</strong></a>
   &nbsp;&middot;&nbsp;
   <a href="ARCHITECTURE.md"><strong>Architecture</strong></a>
   &nbsp;&middot;&nbsp;
@@ -99,7 +99,7 @@ LIFE-OS turns a real-world change into a structured, approval-bound workflow acr
 ## Overview
 
 1. **Open** the [live workspace](https://lifeos-live-production.up.railway.app) and choose **Try interactive demo** for isolated sample data, or sign in for the protected owner workspace.
-2. **Watch** the [repository demo video](https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm).
+2. **Watch** the [2:30 repository demo video](docs/demo/lifeos-balanced-demo-final.mp4). It covers the complete product flow, provider screens, approval boundary, execution graph, verification, My Work, Integrations, Audit Trail, and Settings.
 3. **Inspect** the [complete product tour](#product-tour), including every workspace page, the action review, verified execution, and the mobile layout.
 4. **Read** the [architecture](ARCHITECTURE.md), [AI boundary](AI_USAGE.md), and [security model](SECURITY.md).
 5. **Run** the project locally using the [quick start](#quick-start).
@@ -239,12 +239,14 @@ These captures were taken from the current UI release and cover the complete dem
 
 ## Demo
 
-The repository contains a 3:59 application demo artifact with video, audio narration, and timed subtitles:
+The repository contains the current 2:30 application demo artifact with continuous female narration, visible interaction, provider-screen coverage, and timed subtitles:
 
-- [Watch or download lifeos-demo-final.webm](docs/demo/lifeos-demo-final.webm)
-- [Read the demo script](docs/demo-script.md)
-- [Read the subtitle track](docs/demo/lifeos-demo.srt)
-- [Read the voiceover text](docs/demo/lifeos-demo-voiceover.txt)
+- [Watch or download lifeos-balanced-demo-final.mp4](docs/demo/lifeos-balanced-demo-final.mp4)
+- [Read the balanced demo script](docs/demo/lifeos-balanced-demo-script.md)
+- [Read the subtitle track](docs/demo/lifeos-balanced-demo.srt)
+- [Read the longer archived demo script](docs/demo-script.md)
+
+The provider chapter uses the shipped Connected Apps interface with isolated demo records for Gmail, Google Calendar, Discord, WhatsApp, and Drive. It demonstrates the product surfaces without accessing or mutating personal accounts.
 
 The GitHub-hosted file is the verified repository artifact. If a submission form requires a streaming-host URL, upload this same file to the permitted host rather than inventing a link.
 
@@ -843,7 +845,7 @@ LIFE-OS is released under the [MIT License](LICENSE).
 
 - Repository: <https://github.com/9059Rohith/LIFE-OS>
 - Live workspace: <https://lifeos-live-production.up.railway.app>
-- Demo artifact: <https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm>
+- Demo artifact: https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-balanced-demo-final.mp4
 - Poster: [docs/poster/lifeos-poster.png](docs/poster/lifeos-poster.png)
 - Poster source fallback: [docs/poster/lifeos-poster.svg](docs/poster/lifeos-poster.svg)
 - Screenshots: [docs/screenshots](docs/screenshots)

@@ -1,0 +1,39 @@
+1
+00:00:00,000 --> 00:00:15,000
+A schedule change should not become a manual coordination mess. LIFEOS starts with the real problem: one change creates consequences across Calendar, email, team chat, and personal messages. Research into workflow automation and human-in-the-loop systems led to one design rule: make every consequence visible before anything acts.
+
+2
+00:00:15,000 --> 00:00:30,000
+Here are the application surfaces LIFEOS coordinates: Gmail and Calendar for source context, Discord and WhatsApp for communication, and Drive for supporting information. These provider screens are rendered through the isolated demo boundary, so the recording shows the real product interface without touching a personal account.
+
+3
+00:00:30,000 --> 00:00:45,000
+The solution is an executable consequence graph. LIFEOS gathers context, creates typed dependencies, and makes the order of work understandable. The graph is more than a chatbot response: it is a plan that can be reviewed, approved, executed, and verified.
+
+4
+00:00:45,000 --> 00:01:00,000
+Before a high-impact action can run, the user sees the exact target, arguments, risk, reversibility, and approval binding. This is where the research becomes product behavior: autonomy is useful only when the human can understand and control the next move.
+
+5
+00:01:00,000 --> 00:01:15,000
+After approval, the workflow runs through bounded provider operations. Each node changes state, dependencies are respected, and the result is read back independently. The final state is resolved only when the evidence supports it, not merely because a write request returned successfully.
+
+6
+00:01:15,000 --> 00:01:30,000
+The application record view preserves the provider context behind the plan. Gmail messages, Calendar events, Discord threads, WhatsApp conversations, and Drive files remain inspectable in one place, while demo mode keeps every record isolated from personal accounts.
+
+7
+00:01:30,000 --> 00:01:45,000
+LIFEOS also handles the daily work around the automation: tasks, projects, goals, habits, notes, reminders, and dates. This matters because productivity is not only sending an action; it is keeping the resulting work visible after the workflow finishes.
+
+8
+00:01:45,000 --> 00:02:00,000
+The integrations page makes boundaries explicit. It distinguishes local demo records from connected services, reports availability, and keeps monitoring and provider permissions visible. Unavailable services are shown as unavailable rather than being presented as completed work.
+
+9
+00:02:00,000 --> 00:02:15,000
+Every decision has a durable trail: approvals, attempts, receipts, verification, uncertainty, and recovery. This gives judges and users a way to inspect what happened after the animation ends, which is the reliability layer most automation demos leave out.
+
+10
+00:02:15,000 --> 00:02:30,000
+Finally, the workspace exposes retention, export, connection, and deletion controls. The result is a consequence-aware operating system: it turns a change into a controlled workflow, keeps the human in charge, and makes the final outcome understandable across every connected surface.
