@@ -96,7 +96,7 @@ LIFE-OS turns a real-world change into a structured, approval-bound workflow acr
 
 ---
 
-## Evaluate it in 3 minutes
+## Overview
 
 1. **Open** the [live workspace](https://lifeos-live-production.up.railway.app) and choose **Try interactive demo** for isolated sample data, or sign in for the protected owner workspace.
 2. **Watch** the [repository demo video](https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm).
