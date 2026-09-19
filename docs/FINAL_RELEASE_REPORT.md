@@ -27,15 +27,16 @@ This report separates verified local readiness from external submission gates. I
 - `docs/demo/lifeos-demo-final.webm`: duration 00:03:59.52, 1440x1000, video/audio present.
 - GitHub raw URLs for README, final demo video, dashboard screenshot and poster returned HTTP 200.
 - Railway live smoke checks returned `/health` 200, `/ready` 200, `/` 200, `/desktop.html` 200 and unauthenticated `/api/events` 401.
-- Hosted owner integration check returned Gmail, Calendar, Drive and Discord `read_access_verified`.
+- Hosted owner integration check returned Gmail, Calendar, Drive, Discord and WhatsApp `read_access_verified`.
+- Hosted `/api/apps/whatsapp` returned HTTP 200 with a verified WhatsApp application snapshot while the desktop app was open.
 - Packaged desktop hosted login passed and persisted across restart.
 
 ## Remaining external gates
 
 - Run a live provider acceptance pass proving one approved Calendar to Discord to WhatsApp workflow with independent read-back.
-- WhatsApp hosted bridge currently returns `needs_attention` / `BROWSER_AUTOMATION_ERROR`; the packaged view check did not load WhatsApp while Discord loaded.
+- WhatsApp read access is now verified; the remaining gate is an explicit approved mutation test that may update Calendar and send Discord/WhatsApp messages.
 - Optional: upload the demo video to a streaming host if the hackathon form rejects a GitHub-hosted video artifact.
 
 ## Current completion estimate
 
-Local implementation, GitHub publication, submission assets and public deployment are about 98% complete. The remaining 2% is live WhatsApp provider acceptance for one real Calendar to Discord to WhatsApp workflow with independent read-back.
+Local implementation, GitHub publication, submission assets and public deployment are about 99% complete. The remaining 1% is an explicit live mutation acceptance run for one real Calendar to Discord to WhatsApp workflow with independent read-back.
