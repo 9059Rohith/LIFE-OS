@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-authenticated-lightmode-demo-final.mp4"><strong>Authenticated live demo</strong></a>
+  <a href="https://www.youtube.com/watch?v=efi747ciy18"><strong>Authenticated live demo</strong></a>
   &nbsp;&middot;&nbsp;
   <a href="https://lifeos-live-production.up.railway.app">🚀 <strong>Live workspace</strong></a>
   &nbsp;·&nbsp;
