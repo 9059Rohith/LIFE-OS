@@ -1,0 +1,39 @@
+1
+00:00:00,000 --> 00:00:24,000
+We sign in to the real LIFEOS workspace, switch to light mode, and begin with the user's intent.
+
+2
+00:00:24,000 --> 00:00:48,000
+Real authenticated provider surfaces: Gmail, Calendar, Discord, WhatsApp, and Drive.
+
+3
+00:00:48,000 --> 00:01:12,000
+The overview turns one change into a consequence graph with dependencies.
+
+4
+00:01:12,000 --> 00:01:36,000
+Action review exposes the exact target, risk, arguments, and reversibility.
+
+5
+00:01:36,000 --> 00:02:00,000
+Execution moves through approved, executing, verified, and resolved states.
+
+6
+00:02:00,000 --> 00:02:24,000
+The connected application record keeps the context behind every action inspectable.
+
+7
+00:02:24,000 --> 00:02:48,000
+My Work and Calendar connect automation to the work that follows.
+
+8
+00:02:48,000 --> 00:03:12,000
+Integrations make provider permissions and connection boundaries explicit.
+
+9
+00:03:12,000 --> 00:03:36,000
+Audit Trail preserves approvals, attempts, receipts, and verification evidence.
+
+10
+00:03:36,000 --> 00:04:00,000
+Settings and the final overview show a complete, controlled productivity operating system.

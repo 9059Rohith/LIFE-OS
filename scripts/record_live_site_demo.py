@@ -19,9 +19,10 @@ DOWNLOADS = Path.home() / "Downloads"
 DOWNLOADS.mkdir(parents=True, exist_ok=True)
 
 LIVE_URL = "https://lifeos-live-production.up.railway.app"
-FINAL_MP4 = DOWNLOADS / "LIFEOS_original_live_site_demo.mp4"
-FINAL_SRT = DOWNLOADS / "LIFEOS_original_live_site_demo.srt"
-FINAL_SCRIPT = DOWNLOADS / "LIFEOS_original_live_site_demo_script.md"
+FINAL_MP4 = DOWNLOADS / "LIFEOS_AUTHENTICATED_LIGHTMODE_DEMO_FINAL.mp4"
+FINAL_SRT = DOWNLOADS / "LIFEOS_AUTHENTICATED_LIGHTMODE_DEMO.srt"
+FINAL_SCRIPT = DOWNLOADS / "LIFEOS_AUTHENTICATED_LIGHTMODE_DEMO_SCRIPT.md"
+FINAL_ASS = OUT_DIR / "authenticated-demo.ass"
 RAW_VIDEO_DIR = OUT_DIR / "recordings"
 FULL_AUDIO = OUT_DIR / "live_narration.wav"
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
@@ -31,75 +32,91 @@ HEIGHT = 1080
 
 SCENES = [
     {
-        "duration": 18.0,
-        "subtitle": "We open the real hosted LIFEOS workspace and sign in to the live production site.",
+        "duration": 24.0,
+        "subtitle": "We sign in to the real LIFEOS workspace, switch to light mode, and begin with the user's intent.",
         "narration": (
-            "This is the real hosted LIFEOS workspace, opened from the production Railway URL. "
-            "I am signing in to the private live workspace, not showing a mock storyboard."
-        ),
-    },
-    {
-        "duration": 26.0,
-        "subtitle": "The command center shows a verified cross-app workflow and the dependency graph.",
-        "narration": (
-            "The overview starts with an actual completed workflow. A Calendar change was planned, approved, executed, "
-            "read back from providers, and then compensated where the Calendar mutation was reversible."
-        ),
-    },
-    {
-        "duration": 30.0,
-        "subtitle": "The graph connects Calendar, Discord, WhatsApp and verification evidence.",
-        "narration": (
-            "The consequence graph is the core product surface. It does not just chat about a change. It organizes "
-            "the work into dependent actions, shows prerequisites, and keeps each action tied to evidence."
-        ),
-    },
-    {
-        "duration": 30.0,
-        "subtitle": "The activity timeline proves the workflow moved from detection to verification.",
-        "narration": (
-            "The timeline shows the live lifecycle: detected, context loaded, planned, approved, executing, verified, "
-            "resolved, and compensated. This is the audit path a reviewer can inspect."
-        ),
-    },
-    {
-        "duration": 26.0,
-        "subtitle": "Audit trail entries expose provider receipts and evidence inspection.",
-        "narration": (
-            "The audit trail records decisions and provider receipts. LIFEOS keeps action history separate from the UI, "
-            "so an evaluator can review what happened after the workflow is finished."
+            "This is the authenticated LIFEOS workspace in light mode. The problem is simple but costly: one change in a schedule "
+            "creates a chain of manual updates across email, Calendar, team chat, and personal messages. LIFEOS turns that intent "
+            "into a visible, approval-bound workflow."
         ),
     },
     {
         "duration": 24.0,
-        "subtitle": "Integrations show live boundaries, read checks and approval-protected writes.",
+        "subtitle": "Real authenticated provider surfaces: Gmail, Calendar, Discord, WhatsApp, and Drive.",
         "narration": (
-            "The integrations page shows the safety boundary. Read checks can be refreshed without changing external "
-            "accounts, while Calendar writes and messages remain approval protected."
-        ),
-    },
-    {
-        "duration": 22.0,
-        "subtitle": "The work hub proves LIFEOS is a usable productivity workspace, not only a demo screen.",
-        "narration": (
-            "The My Work area adds the everyday productivity layer: tasks, projects, goals, habits, notes, and saved "
-            "activity that persists in the live workspace."
+            "Here are the real connected application surfaces behind the workflow: Gmail for source context, Google Calendar for time, "
+            "Discord and WhatsApp for communication, and Drive for supporting files. This is the authenticated product interface; "
+            "sensitive account content is redacted in the recording, and no message or calendar change is sent during capture."
         ),
     },
     {
         "duration": 24.0,
-        "subtitle": "Settings document data control, retention and account boundaries.",
+        "subtitle": "The overview turns one change into a consequence graph with dependencies.",
         "narration": (
-            "Settings make the operating model explicit. The user controls preferences, retention, exports, Google "
-            "disconnection, and workspace deletion without exposing provider secrets."
+            "The research direction was human-in-the-loop orchestration: make consequences understandable before autonomy is allowed. "
+            "The overview gathers context, lays out dependent actions, and shows what is waiting for approval, what is running, and "
+            "what has already been verified."
         ),
     },
     {
-        "duration": 18.0,
-        "subtitle": "Final view: a live, evidence-driven automation workspace for real consequences.",
+        "duration": 24.0,
+        "subtitle": "Action review exposes the exact target, risk, arguments, and reversibility.",
         "narration": (
-            "The result is a live automation product: human approval before mutation, provider read-back after execution, "
-            "and an interface that makes the ripple of work understandable."
+            "Before a high-impact action runs, the user can inspect the exact target, arguments, risk, and reversibility. "
+            "This is the core safety decision: AI can help interpret and plan, but the server constructs the action and the person "
+            "approves the exact content."
+        ),
+    },
+    {
+        "duration": 24.0,
+        "subtitle": "Execution moves through approved, executing, verified, and resolved states.",
+        "narration": (
+            "Once approved, the workflow is bounded by provider allowlists, idempotency, retries, and read-back verification. "
+            "A successful request is not treated as proof. Each node changes state, and the final result is resolved only when the "
+            "evidence supports it."
+        ),
+    },
+    {
+        "duration": 24.0,
+        "subtitle": "The connected application record keeps the context behind every action inspectable.",
+        "narration": (
+            "The connected application view keeps the source context visible after planning: mail, messages, events, and files are "
+            "organized around the same consequence flow. That makes the product more than a chatbot; it is a workspace for reliable "
+            "coordination."
+        ),
+    },
+    {
+        "duration": 24.0,
+        "subtitle": "My Work and Calendar connect automation to the work that follows.",
+        "narration": (
+            "The productivity layer continues after execution. My Work brings together tasks, projects, goals, habits, notes, and "
+            "Calendar context, so the outcome does not disappear when the automation finishes. The work remains visible and actionable."
+        ),
+    },
+    {
+        "duration": 24.0,
+        "subtitle": "Integrations make provider permissions and connection boundaries explicit.",
+        "narration": (
+            "The integrations page makes the boundary honest. It distinguishes configured access from verified access, reports provider "
+            "health, and keeps writes approval protected. This reflects the engineering research behind LIFEOS: permissions, failures, "
+            "and uncertainty must be visible instead of hidden behind a success animation."
+        ),
+    },
+    {
+        "duration": 24.0,
+        "subtitle": "Audit Trail preserves approvals, attempts, receipts, and verification evidence.",
+        "narration": (
+            "Every decision leaves an audit trail. Approvals, execution attempts, provider receipts, verification, and recovery states "
+            "remain inspectable. This is the reliability layer that turns an impressive workflow animation into an accountable system."
+        ),
+    },
+    {
+        "duration": 24.0,
+        "subtitle": "Settings and the final overview show a complete, controlled productivity operating system.",
+        "narration": (
+            "Finally, Settings exposes retention, export, connection, and deletion controls before we return to the complete overview. "
+            "The result is a consequence-aware operating system: understand the change, plan the ripple, approve the next move, execute "
+            "within bounds, and verify what actually happened."
         ),
     },
 ]
@@ -126,6 +143,17 @@ def format_srt_time(seconds: float) -> str:
     mins, secs = divmod(whole, 60)
     hours, mins = divmod(mins, 60)
     return f"{hours:02d}:{mins:02d}:{secs:02d},{millis:03d}"
+
+
+def format_ass_time(seconds: float) -> str:
+    whole = int(seconds)
+    centis = int(round((seconds - whole) * 100))
+    if centis == 100:
+        whole += 1
+        centis = 0
+    mins, secs = divmod(whole, 60)
+    hours, mins = divmod(mins, 60)
+    return f"{hours}:{mins:02d}:{secs:02d}.{centis:02d}"
 
 
 def wav_duration(path: Path) -> float:
@@ -230,6 +258,28 @@ def build_audio_and_srt() -> None:
     )
     FINAL_SRT.write_text("\n".join(srt_entries), encoding="utf-8")
     FINAL_SCRIPT.write_text("\n".join(script_lines), encoding="utf-8")
+    ass_lines = [
+        "[Script Info]",
+        "ScriptType: v4.00+",
+        "PlayResX: 1920",
+        "PlayResY: 1080",
+        "ScaledBorderAndShadow: yes",
+        "",
+        "[V4+ Styles]",
+        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
+        "Style: Subtitle,Arial,28,&H00FFFFFF,&H00FFFFFF,&HAA07140F,&HAA07140F,0,0,0,0,100,100,0,0,1,2,0,2,80,80,42,1",
+        "",
+        "[Events]",
+        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
+    ]
+    cursor = 0.0
+    for scene in SCENES:
+        start = format_ass_time(cursor)
+        cursor += scene["duration"]
+        end = format_ass_time(cursor)
+        text = scene["subtitle"].replace("{", "(").replace("}", ")")
+        ass_lines.append(f"Dialogue: 0,{start},{end},Subtitle,,0,0,0,,{{\\fad(220,180)}}{text}")
+    FINAL_ASS.write_text("\n".join(ass_lines), encoding="utf-8")
 
 
 def safe_click(page: Page, label: str, wait_ms: int = 1200) -> None:
@@ -255,8 +305,15 @@ def prepare_page(page: Page) -> None:
         content="""
         * { scroll-behavior: smooth !important; }
         input[type='password'] { font-family: password, sans-serif !important; }
-        .demo-live-redaction {
-          filter: blur(5px);
+        .unified-discord-message,
+        .unified-gmail-row,
+        .unified-gmail-detail,
+        .unified-whatsapp-bubble,
+        .unified-calendar-row,
+        .unified-drive-row,
+        .unified-provider-heading small,
+        .unified-impact-action small {
+          filter: blur(7px);
         }
         """
     )
@@ -271,6 +328,10 @@ def login(page: Page) -> None:
         page.wait_for_timeout(600)
         page.locator("button:has-text('Open workspace')").first.click()
         page.wait_for_timeout(3500)
+    light_mode = page.get_by_role("button", name="Light mode")
+    if light_mode.is_visible(timeout=3000):
+        light_mode.click()
+        page.wait_for_timeout(1800)
 
 
 def record_live_site() -> Path:
@@ -288,86 +349,115 @@ def record_live_site() -> Path:
 
         scene_started = time.monotonic()
         login(page)
+        safe_click(page, "Overview", 1400)
+        prompt = page.locator("textarea").first
+        if prompt.is_visible(timeout=3000):
+            prompt.fill("A flight moved to 06:40. Coordinate the approved updates across my connected apps.")
+        page.mouse.move(1110, 790)
+        page.wait_for_timeout(4500)
         hold_until(scene_started, SCENES[0]["duration"])
 
         scene_started = time.monotonic()
-        safe_click(page, "Overview", 1200)
-        page.mouse.move(980, 424)
-        page.wait_for_timeout(3500)
-        scroll_to(page, 240, 1800)
-        page.wait_for_timeout(2500)
-        scroll_to(page, 0, 1500)
+        safe_click(page, "Connected apps", 1800)
+        page.get_by_label("Gmail screen").wait_for(timeout=15000)
+        page.mouse.move(1500, 235)
+        scroll_to(page, 430, 1800)
+        page.mouse.move(1510, 540)
+        scroll_to(page, 870, 1800)
+        page.mouse.move(1110, 870)
+        scroll_to(page, 0, 1600)
         hold_until(scene_started, SCENES[1]["duration"])
 
         scene_started = time.monotonic()
+        safe_click(page, "Overview", 1600)
         safe_click(page, "Graph", 900)
         page.mouse.move(1165, 485)
-        page.wait_for_timeout(4200)
-        safe_click(page, "List", 1500)
-        safe_click(page, "Graph", 1500)
+        page.wait_for_timeout(3800)
+        safe_click(page, "List", 1300)
+        safe_click(page, "Graph", 1300)
         page.mouse.move(1275, 520)
+        scroll_to(page, 360, 1600)
         hold_until(scene_started, SCENES[2]["duration"])
 
         scene_started = time.monotonic()
-        scroll_to(page, 520, 1800)
-        page.mouse.move(1515, 616)
-        page.wait_for_timeout(5500)
-        scroll_to(page, 920, 1800)
-        page.wait_for_timeout(5500)
-        scroll_to(page, 1210, 1800)
+        review = page.locator("button:has-text('Review')").first
+        if review.is_visible(timeout=3000):
+            review.click()
+            page.wait_for_timeout(5000)
+            page.mouse.move(1130, 575)
+            page.wait_for_timeout(4500)
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(1200)
+        else:
+            page.mouse.move(1420, 890)
         hold_until(scene_started, SCENES[3]["duration"])
 
         scene_started = time.monotonic()
-        safe_click(page, "Audit trail", 1800)
-        page.mouse.move(1540, 330)
-        page.wait_for_timeout(5000)
-        first_evidence = page.locator("button:has-text('Inspect evidence')").first
-        if first_evidence.is_visible(timeout=3000):
-            first_evidence.click()
-            page.wait_for_timeout(5000)
-            close = page.locator("button:has-text('Close'), button[aria-label*='close' i]").first
-            if close.is_visible(timeout=1500):
-                close.click()
-                page.wait_for_timeout(1200)
-            else:
-                page.keyboard.press("Escape")
-                page.wait_for_timeout(1200)
+        safe_click(page, "Overview", 1300)
+        scroll_to(page, 520, 1600)
+        page.mouse.move(1515, 616)
+        page.wait_for_timeout(4000)
+        scroll_to(page, 920, 1600)
+        page.mouse.move(1290, 830)
+        page.wait_for_timeout(4200)
+        scroll_to(page, 0, 1500)
         hold_until(scene_started, SCENES[4]["duration"])
 
         scene_started = time.monotonic()
-        safe_click(page, "Integrations", 1800)
-        page.mouse.move(545, 430)
-        page.wait_for_timeout(4500)
-        check = page.locator("button:has-text('Check API access')").first
-        if check.is_visible(timeout=3000):
-            check.click()
-            page.wait_for_timeout(5000)
-        scroll_to(page, 520, 1500)
+        safe_click(page, "Connected apps", 1500)
+        page.mouse.move(1340, 720)
+        scroll_to(page, 520, 1700)
+        page.mouse.move(720, 700)
+        scroll_to(page, 0, 1500)
+        page.mouse.move(1640, 246)
         hold_until(scene_started, SCENES[5]["duration"])
 
         scene_started = time.monotonic()
         safe_click(page, "My work", 1600)
         page.mouse.move(1030, 460)
-        page.wait_for_timeout(3500)
+        page.wait_for_timeout(3200)
         for tab in ["Projects", "Goals", "Habits", "Notes", "Calendar", "Tasks"]:
-            safe_click(page, tab, 950)
+            safe_click(page, tab, 850)
+        page.mouse.move(1120, 700)
         hold_until(scene_started, SCENES[6]["duration"])
+
+        scene_started = time.monotonic()
+        safe_click(page, "Integrations", 1600)
+        page.mouse.move(545, 430)
+        page.wait_for_timeout(4200)
+        check = page.locator("button:has-text('Check API access')").first
+        if check.is_visible(timeout=3000):
+            check.click()
+            page.wait_for_timeout(5000)
+        scroll_to(page, 520, 1500)
+        page.mouse.move(1210, 690)
+        hold_until(scene_started, SCENES[7]["duration"])
+
+        scene_started = time.monotonic()
+        safe_click(page, "Audit trail", 1800)
+        page.mouse.move(1540, 330)
+        page.wait_for_timeout(4500)
+        first_evidence = page.locator("button:has-text('Inspect evidence')").first
+        if first_evidence.is_visible(timeout=3000):
+            first_evidence.click()
+            page.wait_for_timeout(4500)
+            page.mouse.move(1120, 640)
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(1200)
+        hold_until(scene_started, SCENES[8]["duration"])
 
         scene_started = time.monotonic()
         safe_click(page, "Settings", 1600)
         page.mouse.move(918, 505)
-        page.wait_for_timeout(3500)
+        page.wait_for_timeout(3200)
         scroll_to(page, 560, 1500)
+        page.mouse.move(1370, 660)
         page.wait_for_timeout(3500)
-        scroll_to(page, 0, 1200)
-        hold_until(scene_started, SCENES[7]["duration"])
-
-        scene_started = time.monotonic()
         safe_click(page, "Overview", 1400)
         scroll_to(page, 0, 1200)
         page.mouse.move(1120, 430)
-        page.wait_for_timeout(4000)
-        hold_until(scene_started, SCENES[8]["duration"])
+        page.wait_for_timeout(3500)
+        hold_until(scene_started, SCENES[9]["duration"])
 
         context.close()
         browser.close()
@@ -379,6 +469,7 @@ def record_live_site() -> Path:
 
 
 def mux_final(raw_video: Path) -> None:
+    ass_path = FINAL_ASS.relative_to(ROOT).as_posix()
     run(
         [
             FFMPEG,
@@ -401,6 +492,8 @@ def mux_final(raw_video: Path) -> None:
             "18",
             "-pix_fmt",
             "yuv420p",
+            "-vf",
+            f"subtitles=filename='{ass_path}'",
             "-c:a",
             "aac",
             "-b:a",

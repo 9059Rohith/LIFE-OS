@@ -25,6 +25,7 @@ artifacts/private/
 artifacts/windows/
 artifacts/top1_demo/
 artifacts/live_site_demo/
+artifacts/live-connected-authenticated.png
 artifacts/balanced_submission_demo/
 artifacts/pytest*/
 render-bin/

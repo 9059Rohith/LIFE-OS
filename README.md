@@ -13,6 +13,8 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-authenticated-lightmode-demo-final.mp4"><strong>Authenticated live demo</strong></a>
+  &nbsp;&middot;&nbsp;
   <a href="https://lifeos-live-production.up.railway.app">🚀 <strong>Live workspace</strong></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm">🎬 <strong>Demo video (3:59)</strong></a>
@@ -274,6 +276,14 @@ These captures were taken from the current UI release and cover the complete dem
 ## 🎬 Demo
 
 The repository contains a **3:59** application demo artifact with video, audio narration, and timed subtitles:
+
+The current submission recording is the authenticated light-mode walkthrough. It shows the real Connected Apps interface for Gmail, Google Calendar, Discord, WhatsApp, and Drive, then tours the workflow, review, execution, My Work, Integrations, Audit Trail, and Settings pages with continuous female narration and animated-fade subtitles.
+
+- [Watch or download the authenticated live demo](docs/demo/lifeos-authenticated-lightmode-demo-final.mp4)
+- [Read the authenticated demo script](docs/demo/lifeos-authenticated-lightmode-demo-script.md)
+- [Read the subtitle track](docs/demo/lifeos-authenticated-lightmode-demo.srt)
+
+The recording is read-only: sensitive provider content is redacted in the video, and no external message, calendar event, or account setting is changed during capture.
 
 - 🎥 [Watch or download lifeos-demo-final.webm](docs/demo/lifeos-demo-final.webm)
 - 📝 [Read the demo script](docs/demo-script.md)
