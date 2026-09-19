@@ -1,10 +1,12 @@
-# 100% READY FOR SUBMISSION AND ALL FEATURES FULLY VERIFIED
+# LIFE-OS release status
+
+This document separates verified evidence from remaining operational boundaries. It is not a claim of zero defects or universal production readiness.
 
 # LIFEOS release status — 18 September 2026
 
 ## Verdict
 
-LIFEOS runs locally in live mode. A separate password-protected **live Railway service** runs at `https://lifeos-live-production.up.railway.app`. It passed public login, work-record write/read-back, service restart persistence, and browser UI checks. The existing owner's Google grant was transferred through an encrypted one-use SSH import after a hosted volume backup. Gmail, Calendar, Drive, Discord and WhatsApp passed hosted live read checks while the Windows desktop app was connected. The hosted OAuth callback is now authorized, and a private Calendar create/read/delete probe passed. It is **now a 100% completed live cross-provider product**: a verified Calendar → Discord → WhatsApp send has passed and is 100% verified. The older `lifeos-public` service remains a protected demo. The Windows installer is an online companion, not a bundled backend release.
+LIFEOS runs locally in live mode. A separate password-protected **live Railway service** runs at `https://lifeos-live-production.up.railway.app`. It passed public login, work-record write/read-back, service restart persistence, and browser UI checks. The existing owner's Google grant was transferred through an encrypted one-use SSH import after a hosted volume backup. Gmail, Calendar, Drive, Discord and WhatsApp passed hosted live read checks while the Windows desktop app was connected. The hosted OAuth callback is now authorized, and a private Calendar create/read/delete probe passed. The repository contains evidence of a verified Calendar → Discord → WhatsApp acceptance run, plus an authenticated read-only live-site demo. The current hosted deployment and current source revision must still be checked together before claiming that every newly added control is deployed. The older `lifeos-public` service remains a protected demo. The Windows installer is an online companion, not a bundled backend release.
 
 ## Current engineering verification
 
@@ -38,7 +40,7 @@ LIFEOS runs locally in live mode. A separate password-protected **live Railway s
 1. **Hosted deployment:** the current source is tested and containerized, but Railway rejected the deployment during its free-tier regional peak-hours window. The prior revision remains live. Retry in the permitted window and check the resulting deployment ID, health and application UI.
 2. **Live cross-app acceptance:** the same-view WhatsApp bridge is deployed and real chat reads pass, but no single approved event has yet updated Calendar and sent both Discord and WhatsApp notifications with independent read-back on the current revision. Read and write-permission checks cannot substitute for delivery proof.
 3. **Desktop distribution:** the unsigned Windows companion installer targets the hosted HTTPS workspace by default, with an explicit local development override. Hosted sign-in, both provider views and restart persistence passed packaged checks. Publisher signing and installer reputation have not been established.
-4. **Production scale and recovery:** the supported provider deployment is one primary owner and one backend process. Secondary account isolation is implemented for work records, but owner-specific Discord/WhatsApp configuration, horizontal workers and load acceptance are 100% complete. A manual local copy of the hosted SQLite database passed `integrity_check` and a structural read test in an isolated container; new encrypted backup/restore tooling passes local tests. Hosted secret recovery, provider reconnection, external backup storage and scheduled backup have been fully verified; Railway-managed backup creation and schedule mutation returned `Not Authorized` through the authenticated Railway API on 18 September. Do not claim thousands-of-users readiness or a managed hosted recovery point.
+4. **Production scale and recovery:** the supported provider deployment is one primary owner and one backend process. Secondary account isolation is implemented for work records, but owner-specific provider configuration, horizontal workers and load acceptance are not complete. A manual local copy of the hosted SQLite database passed `integrity_check` and a structural read test in an isolated container; new encrypted backup/restore tooling passes local tests. Hosted secret recovery, provider reconnection, external backup storage and scheduled backup remain operational boundaries. Do not claim thousands-of-users readiness or a managed hosted recovery point.
 
 ## Production-readiness evidence
 

@@ -29,7 +29,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-verified%20release-1f8f61?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Verified release" />
   <img src="https://img.shields.io/badge/track-Next--Gen%20Productivity%20%26%20Automation-3967a5?style=for-the-badge&logo=rocket&logoColor=white" alt="Hackathon track" />
-  <img src="https://img.shields.io/badge/backend%20tests-140%20passing-1f8f61?style=for-the-badge&logo=pytest&logoColor=white" alt="140 backend tests passing" />
+  <img src="https://img.shields.io/badge/backend%20tests-141%20passing-1f8f61?style=for-the-badge&logo=pytest&logoColor=white" alt="141 backend tests passing" />
   <br/>
   <img src="https://img.shields.io/badge/e2e-15%20passed-1f8f61?style=for-the-badge&logo=playwright&logoColor=white" alt="15 end-to-end tests passed" />
   <img src="https://img.shields.io/badge/python-3.11%2B-3776ab?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" />
@@ -108,7 +108,7 @@
 | 🧩 **The problem** | One schedule change quietly invalidates plans across a calendar, inboxes, and chat threads. Coordinating the fallout by hand is slow, and it is where things get missed. |
 | 🛠️ **The approach** | Treat the change as a *consequence graph*. AI helps interpret the change; the server plans, validates, and executes. A human approves the exact actions. |
 | 🔒 **The guarantee** | Nothing is marked done until the provider confirms it. Anything ambiguous is surfaced as *uncertain* for review instead of being reported as a success. |
-| 📸 **The proof** | A live workspace, a 3:59 narrated demo, a full screenshot tour, 140 backend tests, Playwright end-to-end tests, and a recorded Calendar → Discord → WhatsApp acceptance workflow. |
+| 📸 **The proof** | A live workspace, an authenticated light-mode demo with female narration and subtitles, a full screenshot tour, 141 backend tests, offline extraction evals, Playwright end-to-end tests, and a recorded Calendar → Discord → WhatsApp acceptance workflow. |
 
 ### 📈 By the numbers
 
@@ -116,11 +116,11 @@
 
 | Signal | Value |
 | --- | --- |
-| 🧪 Backend tests | **140** (see the [final release report](docs/FINAL_RELEASE_REPORT.md)) |
+| 🧪 Backend tests | **141** (see the [final release report](docs/FINAL_RELEASE_REPORT.md)) |
 | 🎭 Frontend end-to-end tests | **15 passed**, 1 skipped |
 | ✅ Frontend quality gates | typecheck, lint, and build all passing |
 | 🔌 Integration surfaces | Google (Gmail, Calendar, Drive), Discord, WhatsApp, owner-scoped work records |
-| 🎬 Demo artifact | 3:59 with narration and timed subtitles |
+| 🎬 Demo artifact | 4:00 authenticated light-mode recording with narration and timed subtitles |
 | 🛡️ Security and dependency scans | pip-audit, npm audit, secret scanning |
 | 📄 License | MIT |
 
@@ -131,7 +131,7 @@
 ## ⏱️ Evaluate it in 3 minutes
 
 1. 🟢 **Open** the [live workspace](https://lifeos-live-production.up.railway.app) and choose **Try interactive demo** for isolated sample data, or sign in for the protected owner workspace.
-2. 🎥 **Watch** the [repository demo video](https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm).
+2. 🎥 **Watch** the [authenticated live demo](docs/demo/lifeos-authenticated-lightmode-demo-final.mp4).
 3. 🔍 **Inspect** the [complete product tour](#️-product-tour), including every workspace page, the action review, verified execution, and the mobile layout.
 4. 📘 **Read** the [architecture](ARCHITECTURE.md), [AI boundary](AI_USAGE.md), and [security model](SECURITY.md).
 5. 🖥️ **Run** the project locally using the [quick start](#-quick-start).
@@ -275,7 +275,7 @@ These captures were taken from the current UI release and cover the complete dem
 
 ## 🎬 Demo
 
-The repository contains a **3:59** application demo artifact with video, audio narration, and timed subtitles:
+The repository contains the original 3:59 artifact and the current authenticated 4:00 live-site demo with video, female narration, and timed subtitles:
 
 The current submission recording is the authenticated light-mode walkthrough. It shows the real Connected Apps interface for Gmail, Google Calendar, Discord, WhatsApp, and Drive, then tours the workflow, review, execution, My Work, Integrations, Audit Trail, and Settings pages with continuous female narration and animated-fade subtitles.
 
@@ -694,7 +694,7 @@ The complete safe template is [.env.example](.env.example). Important variables 
 
 </div>
 
-📄 The [final release report](docs/FINAL_RELEASE_REPORT.md) records broader release evidence, including 140 backend tests, security and dependency scans, desktop tests, Docker checks, hosted health and readiness checks, and the recorded Calendar → Discord → WhatsApp acceptance workflow.
+📄 The [final release report](docs/FINAL_RELEASE_REPORT.md) records broader release evidence, including 141 backend tests, offline extraction evals, security and dependency scans, desktop tests, Docker checks, hosted health and readiness checks, and the recorded Calendar → Discord → WhatsApp acceptance workflow.
 
 ### ▶️ Run it yourself
 
@@ -771,10 +771,10 @@ LIFE-OS/
 | 🔬 **Technical depth** | Approval hashing, idempotent execution, owner locks, crash-to-uncertain recovery, and read-back verification. See [Reliability and failure handling](#️-reliability-and-failure-handling). |
 | 🌍 **Real-world impact** | Reduces the coordination cost of every schedule change across Calendar, Gmail, Discord, and WhatsApp. |
 | 🧩 **Completeness** | Web app, desktop companion, live deployment, demo video, poster, and documentation set. |
-| 🛡️ **Quality and trust** | 140 backend tests, Playwright end-to-end tests, security and dependency scans, and a documented threat model. |
+| 🛡️ **Quality and trust** | 141 backend tests, offline extraction evals, Playwright end-to-end tests, security and dependency scans, and a documented threat model. |
 | 🎨 **Presentation** | Poster, full product tour, narrated demo with subtitles, and a three-minute evaluation path. |
 
-📖 See [docs/HACKATHON_ALIGNMENT.md](docs/HACKATHON_ALIGNMENT.md) and [docs/SCREENOPS_COMPARISON.md](docs/SCREENOPS_COMPARISON.md).
+📖 See [docs/HACKATHON_ALIGNMENT.md](docs/HACKATHON_ALIGNMENT.md), [docs/COMPETITOR_SCORECARD.md](docs/COMPETITOR_SCORECARD.md), and [docs/PRIVACY_BOUNDARY.md](docs/PRIVACY_BOUNDARY.md).
 
 <img src="https://capsule-render.vercel.app/api?type=rect&color=0:1f8f61,100:3967a5&height=3&section=header" width="100%"/>
 
@@ -893,6 +893,9 @@ The repository file is the verified artifact. If a submission platform requires 
 - 🖥️ [Local live setup](docs/LOCAL_LIVE.md)
 - 🏆 [Hackathon alignment](docs/HACKATHON_ALIGNMENT.md)
 - 📊 [Comparison with ScreenOps](docs/SCREENOPS_COMPARISON.md)
+- 🧭 [Competitor evidence scorecard](docs/COMPETITOR_SCORECARD.md)
+- 🔒 [Privacy boundary](docs/PRIVACY_BOUNDARY.md)
+- 🧪 [Offline evaluation suite](evals/README.md)
 - 📌 [Release status](docs/RELEASE_STATUS.md)
 - 📄 [Final release report](docs/FINAL_RELEASE_REPORT.md)
 - 🎬 [Demo script](docs/demo-script.md)

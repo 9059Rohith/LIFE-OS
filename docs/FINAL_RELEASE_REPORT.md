@@ -8,12 +8,13 @@ This report separates verified readiness from external submission caveats. It is
 - Approval-bound LIFEOS workflow execution with saved evidence, read-back states, retries and audit visibility.
 - Premium reviewer documentation: architecture, AI usage, security, hackathon alignment, ScreenOps benchmark review, demo script, subtitles, screenshots and poster.
 - GitHub-published release assets, including the final demo video, screenshots and poster.
-- A 3:59 local demo video artifact generated from the running app with voiceover and timed captions.
+- An authenticated 4:00 light-mode live-site demo generated from the running app with female narration and animated-fade subtitles.
 - Railway service `lifeos-live` is publicly reachable at `https://lifeos-live-production.up.railway.app`; the live acceptance run used deployment `744cc62c-c40f-47c7-b8b1-5ecb66be437d`.
 
 ## Verified locally
 
-- `python -m pytest -q`: 140 passed, 1 warning.
+- `python -m pytest -q`: 141 passed, 1 warning.
+- `python scripts/run_lifeos_evals.py`: 6/6 extraction cases passed.
 - `python -m ruff check backend tests scripts`: passed.
 - `python -m mypy --strict backend/lifeos/policy.py backend/lifeos/schemas.py backend/lifeos/config.py`: passed.
 - `npm --prefix frontend run lint`: passed.

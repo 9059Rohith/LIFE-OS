@@ -1,38 +1,9 @@
-# LIFEOS vs ScreenOps Benchmark Review
+# LIFE-OS vs ScreenOps
 
-ScreenOps is used here as a quality benchmark, not as source material to copy.
+The current evidence-based comparison is maintained in [COMPETITOR_SCORECARD.md](COMPETITOR_SCORECARD.md).
 
-## What ScreenOps Does Well
+ScreenOps is the benchmark repository at [9059Rohith/screenops-codex](https://github.com/9059Rohith/screenops-codex). It is especially strong in browser-local screen and audio inference, structured intent signals, LangGraph orchestration, and explicit extraction/planning evaluations.
 
-- The problem is understandable in the first lines of the README.
-- The demo evidence is visual and specific.
-- AI usage is explicit: local browser inference, backend planning and MCP tools.
-- The implementation status separates implemented, partial and future work.
-- Screenshots tell a coherent demo story.
+LIFE-OS is especially strong in consequence graphs, approval-bound actions, provider allowlists, idempotency, bounded retries, uncertain delivery states, provider read-back, compensation, audit evidence, and broader Google/Discord/WhatsApp/work-record coverage.
 
-## Where LIFEOS Is Strong
-
-- Deeper execution safety around approvals, idempotency, read-back, uncertain delivery and compensation.
-- Broader provider surface: Google, Discord, WhatsApp desktop bridge, voice and saved work.
-- More explicit release evidence, recovery documentation and live/provider acceptance notes.
-- CI now exists in `.github/workflows/ci.yml`, not only in backup form.
-
-## Where LIFEOS Could Lose Without These Changes
-
-- Top-level security, architecture and AI docs were harder for judges to find.
-- Hackathon alignment was present but scattered across release notes and README sections.
-- Demo recording assets were not prepared as a clear package.
-- Real-time execution visibility had a partially implemented event-stream path with compile/runtime regressions.
-
-## Actions Taken
-
-- Restored broken event stream imports and frontend API export.
-- Added regression tests for owner-scoped event stream delivery.
-- Added top-level architecture, AI usage, security and contribution files.
-- Added hackathon alignment, demo script, subtitle draft and poster asset.
-- Restored CI into the standard `.github/workflows/ci.yml` path.
-
-## Remaining Difference
-
-ScreenOps has a public demo video link and screenshot sequence in its README. LIFEOS has screenshots and hosted URLs, but this environment has not recorded a final narrated video. The repository should not claim a video exists until it is recorded and linked.
-
+Neither repository should claim universal superiority without current evidence. The scorecard records category advantages, known limitations, and the exact tests or artifacts that support each claim.

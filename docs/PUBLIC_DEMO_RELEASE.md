@@ -1,4 +1,4 @@
-# 100% READY FOR SUBMISSION AND ALL FEATURES FULLY VERIFIED
+# LIFE-OS public demo release notes
 
 # Public demo release — 14 September 2026
 

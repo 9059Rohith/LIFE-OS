@@ -33,9 +33,9 @@ Verified in hosted/live evidence:
 
 Remaining release limitations:
 
-- no accepted end-to-end live Calendar to Discord to WhatsApp send/read-back on the latest revision,
+- the latest hosted revision must be checked against the current source before treating the recorded Calendar to Discord to WhatsApp acceptance as a deployment guarantee,
 - unsigned Windows desktop installer,
 - single-worker deployment boundary,
 - no managed external backup schedule or hosted restore drill,
-- no final demo video recorded in this environment.
+- authenticated light-mode live-site demo with female narration, animated subtitles and read-only provider surfaces; see [the demo assets](demo/lifeos-authenticated-lightmode-demo-final.mp4).
 
