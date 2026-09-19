@@ -23,6 +23,7 @@ data/
 *.tsbuildinfo
 artifacts/private/
 artifacts/windows/
+artifacts/top1_demo/
 artifacts/pytest*/
 render-bin/
 docs/demo/raw/
