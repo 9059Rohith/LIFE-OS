@@ -21,7 +21,7 @@ Implemented and verified locally:
 - owner-scoped persistence,
 - audit verification,
 - frontend production build path,
-- offline evaluation suite and a locally validated CI workflow configuration,
+- offline evaluation suite,
 - desktop bridge tests and release checks documented in release notes.
 
 Verified in hosted/live evidence:
