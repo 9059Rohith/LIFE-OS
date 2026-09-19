@@ -77,6 +77,35 @@ test("WhatsApp verification reads the message-container layout used by the signe
   assert.deepEqual(answer, { ok: true, result: { verified: true, provider_id: "real-id" } });
 });
 
+test("WhatsApp read treats read-status containers as outgoing when the tail marker is absent", async (t) => {
+  installConversation(t, []);
+  const originalQuery = global.document.querySelectorAll;
+  global.document.querySelectorAll = (selector) => {
+    if (selector !== '#main [data-testid="msg-container"]') return originalQuery(selector);
+    return [{
+      querySelector: (part) => {
+        if (part === '[data-icon="tail-out"]') return null;
+        if (part === '[data-testid="selectable-text"]') {
+          return { textContent: "Approved message" };
+        }
+        return null;
+      },
+      closest: () => ({
+        getAttribute: () => "real-id",
+        classList: { contains: () => false },
+        querySelector: () => ({ getAttribute: () => "Read" }),
+      }),
+    }];
+  };
+  const answer = await inWhatsAppPage({
+    operation: "read", payload: { contact: "Allowed chat" },
+  });
+  assert.equal(answer.ok, true);
+  assert.equal(answer.result.items[0].id, "real-id");
+  assert.equal(answer.result.items[0].content, "Approved message");
+  assert.equal(answer.result.items[0].outgoing, true);
+});
+
 test("WhatsApp bridge waits for the selected chat before retrying the job", async () => {
   let checks = 0;
   let jobs = 0;

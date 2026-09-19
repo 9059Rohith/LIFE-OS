@@ -35,6 +35,24 @@ async function inWhatsAppPage(job) {
     return candidates.length === 1 ? candidates[0] : null;
   };
   const outgoing = () => {
+    const outgoingState = (container, message) => {
+      const label = (message?.querySelector('[data-testid="msg-meta"] [aria-label]')?.getAttribute("aria-label") || "")
+        .trim().toLowerCase();
+      const statusIcon = !!message?.querySelector('[data-icon="msg-check"], [data-icon="msg-dblcheck"], [data-icon="msg-time"]');
+      const statusLabel = ["sent", "delivered", "read", "pending", "sending", "waiting"].includes(label);
+      const outgoingMarker = !!container.querySelector('[data-icon="tail-out"]')
+        || !!message?.classList?.contains("message-out")
+        || statusIcon
+        || statusLabel;
+      return {
+        outgoing: outgoingMarker,
+        sent: !!container.querySelector('[data-icon="msg-check"], [data-icon="msg-dblcheck"]')
+          || ["sent", "delivered", "read"].includes(label),
+        pending: !!container.querySelector('[data-icon="msg-time"]')
+          || ["pending", "sending", "waiting"].includes(label),
+        label,
+      };
+    };
     const records = new Map();
     for (const node of document.querySelectorAll("#main .message-out[data-id]")) {
       const textNode = node.querySelector('[data-testid="selectable-text"]');
@@ -53,10 +71,15 @@ async function inWhatsAppPage(job) {
       const textNode = message.querySelector('[data-testid="selectable-text"]');
       const text = textNode?.innerText || textNode?.textContent;
       if (!id || !text) continue;
-      const label = (node.querySelector('[data-testid="msg-meta"] [aria-label]')?.getAttribute("aria-label") || "").trim().toLowerCase();
+      const state = outgoingState(message, node);
+      if (!state.outgoing) continue;
       const previous = records.get(id);
-      records.set(id, { id, text: text.trim(), sent: previous?.sent || ["sent", "delivered", "read"].includes(label),
-        pending: previous?.pending || ["pending", "sending", "waiting"].includes(label) });
+      records.set(id, {
+        id,
+        text: text.trim(),
+        sent: previous?.sent || state.sent,
+        pending: previous?.pending || state.pending,
+      });
     }
     return [...records.values()];
   };
@@ -104,9 +127,15 @@ async function inWhatsAppPage(job) {
     const items = [...document.querySelectorAll('#main [data-testid="msg-container"]')].slice(-25).map((node) => {
       const text = node.querySelector('[data-testid="selectable-text"]')?.textContent?.trim();
       const message = node.closest("[data-id]");
-      const outgoingMessage = !!node.querySelector('[data-icon="tail-out"]');
       const status = message?.querySelector('[data-testid="msg-meta"] [aria-label]')?.getAttribute("aria-label")?.trim() || "";
-      return text && message ? { id: message.getAttribute("data-id"), content: text.slice(0, 4000), outgoing: outgoingMessage, status: status.slice(0, 30) } : null;
+      const statusText = status.toLowerCase();
+      const outgoingMessage = !!node.querySelector('[data-icon="tail-out"]')
+        || !!message?.classList?.contains("message-out")
+        || !!message?.querySelector('[data-icon="msg-check"], [data-icon="msg-dblcheck"], [data-icon="msg-time"]')
+        || ["sent", "delivered", "read", "pending", "sending", "waiting"].includes(statusText);
+      return text && message
+        ? { id: message.getAttribute("data-id"), content: text.slice(0, 4000), outgoing: outgoingMessage, status: status.slice(0, 30) }
+        : null;
     }).filter(Boolean);
     return { ok: true, result: { application: "whatsapp", title: contact, items } };
   }
