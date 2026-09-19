@@ -13,6 +13,7 @@ import {
   LoaderCircle,
   LogOut,
   Menu,
+  Moon,
   Plane,
   Play,
   Plus,
@@ -20,6 +21,7 @@ import {
   SquareCheckBig,
   Settings,
   ShieldCheck,
+  Sun,
   X,
 } from "lucide-react";
 import { api, setCsrf, subscribeEvent } from "./api";
@@ -33,6 +35,10 @@ import { VoiceCommand } from "./components/VoiceCommand";
 import { WorkspacePages } from "./components/WorkspacePages";
 import type { VoiceApproval } from "./voice";
 export default function App() {
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window === "undefined") return "dark";
+    return window.localStorage.getItem("lifeos-theme") === "light" ? "light" : "dark";
+  });
   const [session, setSession] = useState<Session | null>(null);
   const [authNeeded, setAuthNeeded] = useState(false);
   const [password, setPassword] = useState("");
@@ -46,6 +52,10 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   const [starting, setStarting] = useState(true);
   const onError = useCallback((message: string) => setError(message), []);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("lifeos-theme", theme);
+  }, [theme]);
   const refreshEvents = useCallback(async (focusId?: string) => {
     const next = await api<LifeEvent[]>("/events");
     setEvents(next);
@@ -294,12 +304,29 @@ export default function App() {
           <span />
         </span>
         <LoaderCircle className="spin" />
+        <div className="boot-flow" aria-hidden="true">
+          <span />
+          <i />
+          <span />
+          <i />
+          <span />
+        </div>
         <p>Opening your workspace…</p>
       </div>
     );
   if (authNeeded)
     return (
       <div className="login-screen">
+        <button
+          className="theme-toggle login-theme-toggle"
+          type="button"
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          <span>{theme === "dark" ? "Light" : "Dark"}</span>
+        </button>
         <form
           className="panel login-card"
           onSubmit={(e) => {
@@ -442,6 +469,16 @@ export default function App() {
             </div>
           </div>
           <div className="header-actions">
+            <button
+              className="theme-toggle"
+              type="button"
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+              <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+            </button>
             <div className="workspace-indicator">
               <i />
               <span>

@@ -105,7 +105,7 @@ export function Graph({
           <div className="empty-orbit">
             <GitBranch size={35} />
           </div>
-          <h3>See the ripple effect.</h3>
+          <h3>See the signal flow.</h3>
           <p>
             Tell LIFEOS what changed. Discover the connections before deciding
             what happens next.
@@ -145,15 +145,26 @@ export function Graph({
               </marker>
             </defs>
             {edges.map((edge) => (
-              <path
-                key={edge.key}
-                d={edge.path}
-                fill="none"
-                stroke={edge.dependency ? "#6e9776" : "#aebda0"}
-                strokeWidth="1"
-                strokeDasharray={edge.dependency ? undefined : "3 3"}
-                markerEnd="url(#dependency-arrow)"
-              />
+              <g key={edge.key} className={`workflow-edge-group ${edge.dependency ? "dependency" : "signal"}`}>
+                <path
+                  className="workflow-edge"
+                  d={edge.path}
+                  fill="none"
+                  stroke={edge.dependency ? "#6e9776" : "#aebda0"}
+                  strokeWidth="1"
+                  strokeDasharray={edge.dependency ? undefined : "3 3"}
+                  markerEnd="url(#dependency-arrow)"
+                />
+                <path
+                  className="workflow-edge-trace"
+                  d={edge.path}
+                  fill="none"
+                  stroke={edge.dependency ? "#75f2bd" : "#7fcbff"}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  pathLength="1"
+                />
+              </g>
             ))}
           </svg>
           <div className="root-node" data-node="root">
@@ -186,7 +197,7 @@ export function Graph({
           >
             {primary.map((a) => (
               <button
-                className="graph-node"
+                className={`graph-node ${["executing", "verifying", "planning", "running"].includes(a.status) ? "is-executing" : ""} ${["verified", "completed", "approved", "resolved"].includes(a.status) ? "is-complete" : ""}`}
                 data-node={a.id}
                 key={a.id}
                 onClick={() => onSelect(a)}
@@ -205,7 +216,7 @@ export function Graph({
             <div className="support-nodes">
               {support.map((a) => (
                 <button
-                  className="graph-node support-node"
+                  className={`graph-node support-node ${["executing", "verifying", "planning", "running"].includes(a.status) ? "is-executing" : ""} ${["verified", "completed", "approved", "resolved"].includes(a.status) ? "is-complete" : ""}`}
                   data-node={a.id}
                   key={a.id}
                   onClick={() => onSelect(a)}

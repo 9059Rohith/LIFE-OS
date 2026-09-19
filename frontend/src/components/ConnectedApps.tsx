@@ -242,7 +242,7 @@ export function ConnectedApps({ onOpenPlan }: { onOpenPlan: (plan: LifeEvent) =>
       </div>
       <div className="unified-ripple" aria-label="Ripple effect" aria-live="polite">
         <Waypoints size={18} />
-        <div><strong>Ripple effect</strong><span>{latestEvent ? `${latestEvent.title} · ${affected.length} connected ${affected.length === 1 ? "app" : "apps"} · ${verifiedCount}/${actionCount} verified` : "Plan a change to see its connected impact."}</span>
+        <div><strong>Signal flow</strong><span>{latestEvent ? `${latestEvent.title} · ${affected.length} connected ${affected.length === 1 ? "app" : "apps"} · ${verifiedCount}/${actionCount} verified` : "Plan a change to see data move through your connected apps."}</span>
           <div className="unified-ripple-track" role="progressbar" aria-label="Verified actions" aria-valuenow={verifiedCount} aria-valuemin={0} aria-valuemax={actionCount || 1}><i style={{ width: `${progress}%` }} /></div>
         </div>
       </div>
@@ -352,8 +352,8 @@ export function ConnectedApps({ onOpenPlan }: { onOpenPlan: (plan: LifeEvent) =>
       </section>
 
     </div>
-    <section className="unified-impact-panel" aria-label="Ripple effect details">
-      <div className="unified-impact-intro"><Waypoints size={18} /><div><h3>Ripple effect</h3><p>{latestEvent ? latestEvent.title : "Plan a change to see which connected apps it affects."}</p></div></div>
+    <section className="unified-impact-panel" aria-label="Signal flow details">
+      <div className="unified-impact-intro"><Waypoints size={18} /><div><h3>Signal flow</h3><p>{latestEvent ? latestEvent.title : "Plan a change to see which connected apps receive the signal."}</p></div></div>
       {latestEvent && <div className="unified-impact-actions">
         {latestEvent.actions.length ? latestEvent.actions.map((action) => <button type="button" className={`unified-impact-action ${["executing", "verifying", "running"].includes(action.status) ? "is-busy" : ""}`} key={`${action.id}-${action.status}`} onClick={() => focusApplication(action.application)} aria-label={`View ${appNames[action.application] || action.application} for ${action.title}`}>
           <span className="unified-impact-icon"><AppIcon name={action.application} size={16} /></span>
