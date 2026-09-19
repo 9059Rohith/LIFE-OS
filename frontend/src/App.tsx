@@ -22,7 +22,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { api, setCsrf } from "./api";
+import { api, setCsrf, subscribeEvent } from "./api";
 import type { Action, LifeEvent, Page, Session } from "./types";
 import { Status, time, AppIcon } from "./components/Common";
 import { Graph } from "./components/Graph";
@@ -46,10 +46,16 @@ export default function App() {
   const [menu, setMenu] = useState(false);
   const [starting, setStarting] = useState(true);
   const onError = useCallback((message: string) => setError(message), []);
-  const refreshEvents = useCallback(async () => {
+  const refreshEvents = useCallback(async (focusId?: string) => {
     const next = await api<LifeEvent[]>("/events");
     setEvents(next);
-    setEvent((selected) => next.find((item) => item.id === selected?.id) || next[0] || null);
+    setEvent(
+      (selected) =>
+        next.find((item) => item.id === focusId) ||
+        next.find((item) => item.id === selected?.id) ||
+        next[0] ||
+        null,
+    );
   }, []);
   async function init() {
     try {
@@ -84,6 +90,17 @@ export default function App() {
       clearInterval(timer);
     };
   }, [session]);
+  useEffect(() => {
+    if (!event?.id || (session?.mode === "live" && session.user.id !== "owner")) return;
+    return subscribeEvent(event.id, () => {
+      void api<LifeEvent>(`/events/${event.id}`)
+        .then((next) => {
+          setEvent(next);
+          void refreshEvents();
+        })
+        .catch(() => {});
+    });
+  }, [event?.id, session, refreshEvents]);
   useEffect(() => {
     if (
       !event ||
@@ -120,7 +137,7 @@ export default function App() {
       setError(
         e instanceof Error
           ? e.message
-          : "Something went wrong. Please try again.",
+          : "The request could not be completed. Check the connection and try again.",
       );
     } finally {
       setBusy(false);
@@ -137,7 +154,7 @@ export default function App() {
       const next = await api<LifeEvent>("/demo/run", "POST", { scenario });
       setEvent(next);
       setPage("overview");
-      await refreshEvents();
+      await refreshEvents(next.id);
     });
   }
   async function operation(op: string, ids?: string[]) {
@@ -153,7 +170,7 @@ export default function App() {
         );
         setEvent(next);
         setReview(null);
-        await refreshEvents();
+        await refreshEvents(next.id);
       } catch (error) {
         setEvent(
           await api<LifeEvent>(`/events/${event.id}`).catch(() => event),
@@ -171,7 +188,7 @@ export default function App() {
         {},
       );
       setEvent(next);
-      await refreshEvents();
+      await refreshEvents(next.id);
     });
   }
   async function changeAction(args: Record<string, unknown>) {
@@ -182,7 +199,7 @@ export default function App() {
       });
       setEvent(await api<LifeEvent>(`/events/${event.id}`));
       setReview(null);
-      await refreshEvents();
+      await refreshEvents(event.id);
     });
   }
   async function reject() {
@@ -191,7 +208,7 @@ export default function App() {
       await api(`/events/${event.id}/actions/${review.id}/reject`, "POST", {});
       setEvent(await api<LifeEvent>(`/events/${event.id}`));
       setReview(null);
-      await refreshEvents();
+      await refreshEvents(event.id);
     });
   }
   async function submit(text: string, simulation: boolean, source = "text") {
@@ -203,7 +220,7 @@ export default function App() {
       });
       setEvent(next);
       setPage("overview");
-      await refreshEvents();
+      await refreshEvents(next.id);
     });
   }
   async function approveVoice(snapshot: VoiceApproval) {

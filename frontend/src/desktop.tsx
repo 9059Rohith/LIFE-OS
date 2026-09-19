@@ -17,7 +17,7 @@ import {
   Sparkles,
   Waypoints,
 } from "lucide-react";
-import { api, setCsrf } from "./api";
+import { api, setCsrf, subscribeEvent } from "./api";
 import type { Action, LifeEvent, Session } from "./types";
 import "./desktop.css";
 
@@ -165,6 +165,13 @@ function DesktopApp() {
     }, 5000);
     return () => window.clearInterval(timer);
   }, [load]);
+
+  useEffect(() => {
+    if (!current?.id || session?.mode !== "live") return;
+    return subscribeEvent(current.id, () => {
+      void load();
+    });
+  }, [current?.id, session, load]);
 
   async function createEvent() {
     const text = input.trim();

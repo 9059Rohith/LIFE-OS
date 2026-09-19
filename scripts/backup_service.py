@@ -6,8 +6,6 @@ and stores it in a backups directory (or uploads to S3 in production).
 """
 import os
 import time
-import shutil
-from pathlib import Path
 from cryptography.fernet import Fernet
 
 def perform_backup(db_path, backup_dir, encryption_key):

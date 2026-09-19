@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 from fastapi import HTTPException
 from contextlib import asynccontextmanager
 from .store import uid, digest
+from .event_stream import EventNotice, EventStream
 from .planning import APPS, calendar_time, extract, make_plan, make_reschedule_plan, now_iso, seed
 from .policy import approval_valid, classify
 
@@ -16,8 +17,9 @@ GOOGLE = "https://www.googleapis.com"
 
 
 class Engine:
-    def __init__(self, db, settings, providers=None):
+    def __init__(self, db, settings, providers=None, event_stream: EventStream | None = None):
         self.db, self.settings, self.providers = db, settings, providers
+        self.event_stream = event_stream
         self.locks = {}
         self.redis = None
         if getattr(settings, "redis_url", None):
@@ -52,6 +54,15 @@ class Engine:
             event["cancel_requested"] = True
             event["status"] = "cancelled"
         self.db.put(owner, "event", event["id"], event)
+        if self.event_stream:
+            self.event_stream.publish(
+                EventNotice(
+                    owner=owner,
+                    event_id=event["id"],
+                    version=int(event.get("version") or 0),
+                    updated_at=now_iso(),
+                )
+            )
         return event
 
     def log(self, owner, event, stage, message, application=None, latency_ms=None):
@@ -99,6 +110,7 @@ class Engine:
         started = time.perf_counter()
         preferences = self.settings_for(owner)
         self.db.prune_events(owner, preferences["retention_days"])
+        self.db.prune_sessions()
         entities = extract(text, preferences["timezone"])
         if self.settings.mode == "demo":
             if not self.db.list(owner, "app"):

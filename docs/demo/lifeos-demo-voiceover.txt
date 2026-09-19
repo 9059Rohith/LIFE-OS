@@ -1,0 +1,31 @@
+What happens when one schedule change quietly creates five follow-up tasks?
+
+A flight moves. A client meeting is now at risk. The calendar needs to change. The client needs a message. The team needs to know. And every action needs evidence, not just a confident AI response.
+
+This is LIFEOS: a consequence automation workspace for real operational changes. It does not behave like a generic chatbot. It turns a change into a reviewed workflow, keeps the user in control, executes approved actions, and records verification evidence.
+
+Here is the main dashboard. The workspace is organized around recent events, a consequence graph, an activity timeline, and an approval center. The user can start from text, voice, uploaded content, a demo scenario, or connected application context.
+
+For the demo, we trigger a realistic flight disruption. LIFEOS receives the changed flight signal, reads the known local application records, and builds a plan. The graph shows the event, the proposed actions, and the dependencies between them.
+
+The important part is the approval boundary. LIFEOS shows the exact Calendar update, exact messages, exact destinations, and risk level before anything executes. AI can help understand the event, but the server owns policy, validation, and authority. External text cannot grant permission to send arbitrary messages or choose arbitrary recipients.
+
+Opening an action reveals the exact payload that would be executed. If the user edits an action, earlier approvals are invalidated. Approval is bound to the current plan version and the hash of the action arguments, so stale approvals cannot silently authorize changed work.
+
+Now we approve the plan and execute it. The workflow engine runs bounded actions, uses idempotency keys, checks dependencies, and requires read-back verification before marking work complete. This is the difference between a chatbot answer and a real automation system.
+
+The result is resolved with evidence. LIFEOS confirms which actions were verified and keeps an audit trail for every major stage: detection, context retrieval, planning, approval, execution, verification, and resolution.
+
+The demo applications view shows the persistent application records behind the local demo. These are not presented as live third-party success. They are a controlled local verification environment, while the release documentation separately records what has and has not been accepted against live providers.
+
+The audit screen gives reviewers an evidence trail. LIFEOS is designed for workflows where trust matters: cross-app automation, provider boundaries, manual-review states, and recovery-aware execution.
+
+Integrations cover Google Workspace context, Discord notifications, and WhatsApp through the desktop companion bridge. Live provider actions remain primary-owner guarded, and the documentation is explicit about the remaining live Calendar to Discord to WhatsApp acceptance boundary.
+
+Settings and privacy controls keep the workspace understandable: retention, account boundaries, export and deletion behavior, source monitoring, and usage evidence are surfaced rather than hidden.
+
+Finally, the responsive view shows the same product on mobile. A user can inspect the event, navigate the workspace, and keep control of automation even on a narrow screen.
+
+Technically, LIFEOS combines a React command center, a FastAPI workflow engine, SQLAlchemy persistence, provider adapters, approval hashes, idempotency keys, read-back verification, audit chaining, and a Windows desktop bridge for signed-in provider sites.
+
+The core idea is simple: when something changes, LIFEOS handles what happens next, but only with reviewed actions, explicit evidence, and honest operational boundaries.

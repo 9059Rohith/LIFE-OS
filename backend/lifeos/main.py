@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, Request, Response, HTTPException, UploadFile, File
-from fastapi.responses import RedirectResponse, FileResponse, JSONResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, FileResponse, JSONResponse, HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from .config import Settings
@@ -15,8 +15,7 @@ from .security import Security
 from .limits import BodyLimitMiddleware, VoiceBudget
 from .engine import Engine
 from fastapi import WebSocket, WebSocketDisconnect
-import struct
-import math
+from .event_stream import EventStream
 from .telemetry import scope as usage_scope, snapshot as usage_snapshot
 from .privacy import register_privacy
 from .ingestion import Ingestion
@@ -62,7 +61,7 @@ def create_app(settings=None):
 
             desktop_bridge = DesktopBridge()
         providers = LiveProviders(settings, token_loader, token_saver, desktop_bridge)
-    engine = Engine(db, settings, providers)
+    engine = Engine(db, settings, providers, EventStream())
     ingestion = Ingestion(db, settings, engine, providers)
 
     @asynccontextmanager
@@ -254,6 +253,45 @@ def create_app(settings=None):
     @app.get("/api/events/{id}")
     def event(id: str, request: Request):
         return engine.event(require_live_primary_owner(request), id)
+
+    @app.get("/api/events/{id}/stream")
+    async def event_stream(id: str, request: Request):
+        owner = require_live_primary_owner(request)
+        engine.event(owner, id)
+        queue = engine.event_stream.subscribe(owner, id) if engine.event_stream else None
+
+        async def frames():
+            try:
+                yield ": connected\n\n"
+                while queue is not None:
+                    if await request.is_disconnected():
+                        break
+                    try:
+                        notice = await asyncio.wait_for(queue.get(), timeout=15)
+                    except asyncio.TimeoutError:
+                        yield ": keepalive\n\n"
+                        continue
+                    payload = json.dumps(
+                        {
+                            "event_id": notice.event_id,
+                            "version": notice.version,
+                            "updated_at": notice.updated_at,
+                        }
+                    )
+                    yield f"data: {payload}\n\n"
+            finally:
+                if queue is not None and engine.event_stream:
+                    engine.event_stream.unsubscribe(owner, id, queue)
+
+        return StreamingResponse(
+            frames(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache, no-store",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
+            },
+        )
 
     @app.post("/api/demo/reset")
     async def reset(request: Request):
@@ -605,9 +643,6 @@ def create_app(settings=None):
         # In a production setting, authenticate the WebSocket connection.
         # For simplicity in this roadmap step, we accept and buffer audio chunks.
         audio_buffer = bytearray()
-        silence_threshold = 500  # Example RMS threshold
-        silence_duration = 0
-        silence_limit = 40  # Number of silent chunks before we trigger transcription (e.g. 40 * 50ms = 2s)
         
         try:
             while True:

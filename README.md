@@ -13,6 +13,12 @@
 
 *LIFE-OS is a hyper-connected, distributed event-based system that unifies your workflows, communication, and knowledge into a single, intelligent interface.*
 
+**Track fit:** Next-Gen Productivity & Automation. LIFEOS demonstrates AI-assisted workflow orchestration, approval-bound execution and verifiable automation for repetitive consequence-management work.
+
+**Reviewer links:** [Architecture](ARCHITECTURE.md) | [AI usage](AI_USAGE.md) | [Security](SECURITY.md) | [Hackathon alignment](docs/HACKATHON_ALIGNMENT.md) | [Demo script](docs/demo-script.md) | [Final release report](docs/FINAL_RELEASE_REPORT.md) | [Poster](docs/poster/lifeos-poster.svg) | [ScreenOps benchmark review](docs/SCREENOPS_COMPARISON.md)
+
+This repository includes a React command center, a FastAPI service, durable application state, a Windows shell for the actual Discord and WhatsApp websites, provider adapters and deployment configuration. The default configuration is live mode with an empty workspace. A separate live Railway service is deployed, while the existing public demo retains labeled local records. **The live product is not yet fully accepted**; see [current release status](docs/RELEASE_STATUS.md). Account registration and isolated work records are available behind an off-by-default setting; connected provider actions remain restricted to the primary owner.
+
 ---
 </div>
 
@@ -41,6 +47,14 @@
 Modern digital life is fragmented across dozens of apps, platforms, and devices. **LIFE-OS** is designed to be the central nervous system of your digital existence. By ingesting events from diverse platforms (Discord, WhatsApp, Google services) and processing them through the centralized **Ripple Intelligence Engine**, LIFE-OS contextualizes, organizes, and automates your daily digital interactions.
 
 It is more than a dashboard; it is a contextual memory and command center for your life.
+
+## Demo assets
+
+The repository includes a local submission video at [`docs/demo/lifeos-demo-final.webm`](docs/demo/lifeos-demo-final.webm), the recording script at [`docs/demo-script.md`](docs/demo-script.md), timed subtitles at [`docs/demo/lifeos-demo.srt`](docs/demo/lifeos-demo.srt), generated screenshots in [`docs/screenshots/`](docs/screenshots/) and a poster at [`docs/poster/lifeos-poster.svg`](docs/poster/lifeos-poster.svg). The video was generated from the local LIFEOS demo app; it is not a public hosted video link until uploaded by the repository owner.
+
+## Verification
+
+See [Final release report](docs/FINAL_RELEASE_REPORT.md) for the exact local commands, test results, dependency audits, demo artifact duration and remaining external acceptance gates.
 
 ## ✨ Core Features
 

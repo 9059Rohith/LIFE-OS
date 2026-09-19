@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">LIFEOS hackathon poster</title>
+  <desc id="desc">A product poster summarizing LIFEOS as a reviewed cross-app automation workspace.</desc>
+  <rect width="1600" height="1000" fill="#f6f4ef"/>
+  <path d="M0 0h1600v1000H0z" fill="#f6f4ef"/>
+  <path d="M70 90h1460v820H70z" fill="#fffdf8" stroke="#1b1b18" stroke-width="3"/>
+  <g fill="none" stroke="#d8d1c3" stroke-width="2">
+    <path d="M120 210h1360M120 340h1360M120 470h1360M120 600h1360M120 730h1360"/>
+    <path d="M320 150v700M620 150v700M920 150v700M1220 150v700"/>
+  </g>
+  <text x="130" y="185" font-family="Inter, Arial, sans-serif" font-size="86" font-weight="800" fill="#151513">LIFEOS</text>
+  <text x="132" y="245" font-family="Inter, Arial, sans-serif" font-size="34" fill="#454039">Consequence automation for real schedule changes.</text>
+  <text x="132" y="302" font-family="Inter, Arial, sans-serif" font-size="24" fill="#6d665b">Plan, approve, execute, verify and audit cross-app workflows.</text>
+
+  <g transform="translate(130 380)">
+    <rect width="300" height="120" rx="6" fill="#151513"/>
+    <text x="28" y="45" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="700" fill="#fffdf8">Problem</text>
+    <text x="28" y="82" font-family="Inter, Arial, sans-serif" font-size="20" fill="#eee7d8">One change creates many</text>
+    <text x="28" y="108" font-family="Inter, Arial, sans-serif" font-size="20" fill="#eee7d8">manual follow-ups.</text>
+  </g>
+  <g transform="translate(470 380)">
+    <rect width="300" height="120" rx="6" fill="#244b47"/>
+    <text x="28" y="45" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="700" fill="#fffdf8">Solution</text>
+    <text x="28" y="82" font-family="Inter, Arial, sans-serif" font-size="20" fill="#e8f1ee">A reviewed workflow</text>
+    <text x="28" y="108" font-family="Inter, Arial, sans-serif" font-size="20" fill="#e8f1ee">with real evidence.</text>
+  </g>
+  <g transform="translate(810 380)">
+    <rect width="300" height="120" rx="6" fill="#7b3f2f"/>
+    <text x="28" y="45" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="700" fill="#fffdf8">Safety</text>
+    <text x="28" y="82" font-family="Inter, Arial, sans-serif" font-size="20" fill="#f8e9e4">Approval hashes and</text>
+    <text x="28" y="108" font-family="Inter, Arial, sans-serif" font-size="20" fill="#f8e9e4">provider read-back.</text>
+  </g>
+  <g transform="translate(1150 380)">
+    <rect width="300" height="120" rx="6" fill="#4d4c86"/>
+    <text x="28" y="45" font-family="Inter, Arial, sans-serif" font-size="25" font-weight="700" fill="#fffdf8">Stack</text>
+    <text x="28" y="82" font-family="Inter, Arial, sans-serif" font-size="20" fill="#ececff">React, FastAPI,</text>
+    <text x="28" y="108" font-family="Inter, Arial, sans-serif" font-size="20" fill="#ececff">SQLAlchemy, Electron.</text>
+  </g>
+
+  <g transform="translate(170 620)" fill="none" stroke="#151513" stroke-width="4">
+    <circle cx="0" cy="0" r="32" fill="#fffdf8"/>
+    <circle cx="240" cy="0" r="32" fill="#fffdf8"/>
+    <circle cx="480" cy="0" r="32" fill="#fffdf8"/>
+    <circle cx="720" cy="0" r="32" fill="#fffdf8"/>
+    <circle cx="960" cy="0" r="32" fill="#fffdf8"/>
+    <path d="M34 0h172M274 0h172M514 0h172M754 0h172"/>
+  </g>
+  <g font-family="Inter, Arial, sans-serif" font-size="22" fill="#151513" text-anchor="middle">
+    <text x="170" y="700">Input</text>
+    <text x="410" y="700">Plan</text>
+    <text x="650" y="700">Approve</text>
+    <text x="890" y="700">Execute</text>
+    <text x="1130" y="700">Verify</text>
+  </g>
+  <text x="130" y="825" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#151513">Repository</text>
+  <text x="130" y="865" font-family="Inter, Arial, sans-serif" font-size="22" fill="#454039">github.com/9059Rohith/LIFE-OS</text>
+  <text x="900" y="825" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#151513">Live workspace</text>
+  <text x="900" y="865" font-family="Inter, Arial, sans-serif" font-size="22" fill="#454039">lifeos-live-production.up.railway.app</text>
+</svg>

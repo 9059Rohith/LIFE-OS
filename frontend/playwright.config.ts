@@ -10,6 +10,8 @@ const virtualPython = process.platform === "win32"
   : resolve(projectRoot, ".venv/bin/python");
 const python = existsSync(virtualPython) ? virtualPython : process.platform === "win32" ? "python" : "python3";
 const testBackend = "http://127.0.0.1:8013";
+const frontendPort = process.env.E2E_PORT || "5173";
+const frontendUrl = `http://127.0.0.1:${frontendPort}`;
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -23,7 +25,7 @@ export default defineConfig({
         "--use-fake-ui-for-media-stream",
       ],
     },
-    baseURL: process.env.E2E_BASE_URL || "http://127.0.0.1:5173",
+    baseURL: process.env.E2E_BASE_URL || frontendUrl,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
@@ -44,14 +46,15 @@ export default defineConfig({
         LIFEOS_MODE: "demo", LIFEOS_ENVIRONMENT: "test",
         LIFEOS_DATABASE_URL: `sqlite:///./.private/e2e-${process.pid}.db`, LIFEOS_PUBLIC_DEMO: "false",
         LIFEOS_AUTH_PASSWORD: "", LIFEOS_ENCRYPTION_KEY: "",
+        LIFEOS_ALLOWED_ORIGINS: JSON.stringify([frontendUrl, testBackend]),
       },
       url: testBackend + "/health",
       reuseExistingServer: false,
     },
     {
-      command: "npm run dev",
+      command: `npm run dev -- --port ${frontendPort}`,
       env: { LIFEOS_API_URL: testBackend },
-      url: "http://127.0.0.1:5173",
+      url: frontendUrl,
       reuseExistingServer: false,
     },
   ],

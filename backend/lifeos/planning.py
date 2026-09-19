@@ -50,7 +50,7 @@ def seed(db, owner):
             },
             {
                 "id": "flight",
-                "title": "AI-742 · Bengaluru ? Delhi",
+                "title": "AI-742 · Bengaluru to Delhi",
                 "start": f"{date}T11:30:00+05:30",
                 "end": f"{date}T14:15:00+05:30",
                 "etag": "seed-1",
@@ -303,7 +303,7 @@ def make_plan(text, source, simulation, entities, context, timezone, mode):
     flight = entities["event_type"] == "flight_change"
     flight_duration = timedelta(hours=2, minutes=45)
     flight_record = None
-    if flight and mode == "live":
+    if flight:
         matching_flights = [
             r
             for r in flat

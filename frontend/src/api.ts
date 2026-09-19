@@ -30,6 +30,11 @@ export async function api<T>(
     ? (undefined as T)
     : (response.json() as Promise<T>);
 }
+export function subscribeEvent(id: string, onNotice: () => void): () => void {
+  const source = new EventSource(`/api/events/${encodeURIComponent(id)}/stream`);
+  source.onmessage = () => onNotice();
+  return () => source.close();
+}
 export async function audioRequest(
   path: string,
   body: FormData | { text: string },
