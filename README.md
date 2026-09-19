@@ -50,7 +50,7 @@ It is more than a dashboard; it is a contextual memory and command center for yo
 
 ## Demo assets
 
-The repository includes a local submission video at [`docs/demo/lifeos-demo-final.webm`](docs/demo/lifeos-demo-final.webm), the recording script at [`docs/demo-script.md`](docs/demo-script.md), timed subtitles at [`docs/demo/lifeos-demo.srt`](docs/demo/lifeos-demo.srt), generated screenshots in [`docs/screenshots/`](docs/screenshots/) and a poster at [`docs/poster/lifeos-poster.svg`](docs/poster/lifeos-poster.svg). The video was generated from the local LIFEOS demo app; it is not a public hosted video link until uploaded by the repository owner.
+The repository includes a public GitHub demo video artifact at [`docs/demo/lifeos-demo-final.webm`](docs/demo/lifeos-demo-final.webm), the recording script at [`docs/demo-script.md`](docs/demo-script.md), timed subtitles at [`docs/demo/lifeos-demo.srt`](docs/demo/lifeos-demo.srt), generated screenshots in [`docs/screenshots/`](docs/screenshots/) and a poster at [`docs/poster/lifeos-poster.svg`](docs/poster/lifeos-poster.svg). The video was generated from the local LIFEOS demo app; upload it to a streaming host only if the hackathon form rejects a GitHub-hosted video artifact.
 
 ## Verification
 
@@ -86,7 +86,7 @@ LIFE-OS utilizes a decoupled, event-driven architecture to ensure scalability an
 | **Frontend** | React 18, Vite, TypeScript, TailwindCSS (Utility logic) |
 | **Database** | SQLite (Production-ready local file storage via `data/lifeos.db`) |
 | **AI / ML** | OpenAI GPT-4 API (configurable) |
-| **Deployment** | Docker, Render, GitHub Actions |
+| **Deployment** | Docker, Render/Railway configuration |
 
 ---
 
@@ -186,9 +186,9 @@ LIFEOS_WHATSAPP_ENABLED=true
 
 ## 🧪 Quality Assurance
 
-We maintain a rigorous standard of code quality. LIFE-OS has passed a **100% end-to-end QA audit**:
-- **Backend APIs:** 137/137 tests passing (Testing authentication, origin parsing, schema validation, and integrations).
-- **Frontend & Desktop:** 7/7 UI/UX tests passing (Testing modal states, ripple effects, responsive layouts, and zero console errors).
+We maintain a rigorous standard of code quality. LIFE-OS has local verification evidence for backend, frontend, desktop, dependency and secret-scan checks:
+- **Backend APIs:** 139 tests passed locally.
+- **Frontend & Desktop:** frontend build/lint passed locally; desktop tests passed 7/7.
 
 *To run tests locally, refer to the `tests/` directory and use `pytest` for the backend.*
 

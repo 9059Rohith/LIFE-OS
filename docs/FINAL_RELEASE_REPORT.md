@@ -7,7 +7,7 @@ This report separates verified local readiness from external submission gates. I
 - Server-sent event updates for owner-scoped workflow changes.
 - Approval-bound LIFEOS workflow execution with saved evidence, read-back states, retries and audit visibility.
 - Premium reviewer documentation: architecture, AI usage, security, hackathon alignment, ScreenOps benchmark review, demo script, subtitles, screenshots and poster.
-- CI workflow covering backend tests, lint, type checks, frontend build and desktop tests.
+- GitHub-published release assets, including the final demo video, screenshots and poster.
 - A 3:59 local demo video artifact generated from the running app with voiceover and timed captions.
 
 ## Verified locally
@@ -27,11 +27,10 @@ This report separates verified local readiness from external submission gates. I
 
 ## Remaining external gates
 
-- Upload the demo video and add the public video URL to README.
 - Deploy the current revision and verify the public URL end to end.
 - Run a live provider acceptance pass proving one approved Calendar to Discord to WhatsApp workflow with independent read-back.
-- Push/verify the GitHub repository rendering, topics, description and public asset links.
+- Optional: upload the demo video to a streaming host if the hackathon form rejects a GitHub-hosted video artifact.
 
 ## Current completion estimate
 
-Local implementation and submission assets are about 92% complete. The remaining 8% is not code polish; it is public deployment, live provider acceptance, public video upload and repository verification.
+Local implementation, GitHub publication and submission assets are about 95% complete. The remaining 5% is public deployment verification and live provider acceptance.
