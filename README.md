@@ -5,7 +5,7 @@
 LIFE-OS turns a real-world change into a structured, approval-bound workflow across the applications that need to respond. It gathers context, builds an action graph, waits for human approval, executes bounded provider actions, verifies the result by reading providers back, and preserves the evidence in an audit trail.
 
 <p align="center">
-  <img src="docs/poster/lifeos-poster.svg" alt="LIFE-OS poster" width="920" />
+  <img src="docs/poster/lifeos-poster.png" alt="LIFE-OS product poster" width="1200" />
 </p>
 
 <p align="center">
@@ -28,7 +28,7 @@ LIFE-OS turns a real-world change into a structured, approval-bound workflow acr
 
 1. **Open** the [live workspace](https://lifeos-live-production.up.railway.app) and choose **Try interactive demo** for isolated sample data, or sign in for the protected owner workspace.
 2. **Watch** the [repository demo video](https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm).
-3. **Inspect** the [dashboard](docs/screenshots/01-dashboard.png), [workflow plan](docs/screenshots/02-workflow-plan.png), and [verified result](docs/screenshots/03-verified-result.png).
+3. **Inspect** the [complete screenshot gallery](#current-product-screenshots), including every workspace page, the action review, verified execution, and mobile layout.
 4. **Read** the [architecture](ARCHITECTURE.md), [AI boundary](AI_USAGE.md), and [security model](SECURITY.md).
 5. **Run** the project locally using the setup below.
 
@@ -69,17 +69,36 @@ The product is deliberately narrower than a general autonomous office agent. Its
 - Responsive React web UI plus a Windows Electron companion for real Discord and WhatsApp web sessions.
 - Light/dark UI modes and motion-aware workflow visualization.
 
-## Product screenshots
+## Current product screenshots
 
-![LIFE-OS command center](docs/screenshots/01-dashboard.png)
+These captures were taken from the current UI release and cover the complete demo lifecycle and every primary workspace page.
 
-![LIFE-OS workflow plan](docs/screenshots/02-workflow-plan.png)
-
-![LIFE-OS verified result](docs/screenshots/03-verified-result.png)
-
-![LIFE-OS audit trail](docs/screenshots/05-audit-trail.png)
-
-![LIFE-OS mobile workspace](docs/screenshots/06-mobile-overview.png)
+<table>
+  <tr>
+    <td><img src="docs/screenshots/01-overview-empty.png" alt="LIFE-OS empty overview" width="480" /></td>
+    <td><img src="docs/screenshots/02-workflow-plan.png" alt="LIFE-OS consequence workflow plan" width="480" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/03-action-review.png" alt="LIFE-OS exact action review dialog" width="480" /></td>
+    <td><img src="docs/screenshots/03-verified-result.png" alt="LIFE-OS verified workflow result" width="480" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/04-demo-applications.png" alt="LIFE-OS demo application records" width="480" /></td>
+    <td><img src="docs/screenshots/05-my-work.png" alt="LIFE-OS My Work page" width="480" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/06-calendar.png" alt="LIFE-OS calendar page" width="480" /></td>
+    <td><img src="docs/screenshots/07-integrations.png" alt="LIFE-OS integrations page" width="480" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/08-audit-trail.png" alt="LIFE-OS audit trail page" width="480" /></td>
+    <td><img src="docs/screenshots/09-settings.png" alt="LIFE-OS settings page" width="480" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/10-overview-complete.png" alt="LIFE-OS completed overview" width="480" /></td>
+    <td><img src="docs/screenshots/11-mobile-overview.png" alt="LIFE-OS responsive mobile overview" width="480" /></td>
+  </tr>
+</table>
 
 ## Demo
 
@@ -395,5 +414,6 @@ LIFE-OS is released under the [MIT License](LICENSE).
 - Repository: https://github.com/9059Rohith/LIFE-OS
 - Live workspace: https://lifeos-live-production.up.railway.app
 - Demo artifact: https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm
-- Poster: [docs/poster/lifeos-poster.svg](docs/poster/lifeos-poster.svg)
+- Poster: [docs/poster/lifeos-poster.png](docs/poster/lifeos-poster.png)
+- Poster source fallback: [docs/poster/lifeos-poster.svg](docs/poster/lifeos-poster.svg)
 - Screenshots: [docs/screenshots](docs/screenshots)
