@@ -26,7 +26,7 @@ LIFE-OS turns a real-world change into a structured, approval-bound workflow acr
 
 ## Evaluate it in 3 minutes
 
-1. **Open** the [password-protected live workspace](https://lifeos-live-production.up.railway.app).
+1. **Open** the [live workspace](https://lifeos-live-production.up.railway.app) and choose **Try interactive demo** for isolated sample data, or sign in for the protected owner workspace.
 2. **Watch** the [repository demo video](https://github.com/9059Rohith/LIFE-OS/blob/main/docs/demo/lifeos-demo-final.webm).
 3. **Inspect** the [dashboard](docs/screenshots/01-dashboard.png), [workflow plan](docs/screenshots/02-workflow-plan.png), and [verified result](docs/screenshots/03-verified-result.png).
 4. **Read** the [architecture](ARCHITECTURE.md), [AI boundary](AI_USAGE.md), and [security model](SECURITY.md).
@@ -262,7 +262,8 @@ The complete safe template is [.env.example](.env.example). Important variables 
 
 | Variable | Purpose |
 | --- | --- |
-| LIFEOS_AUTH_PASSWORD | Required live workspace login secret. |
+| LIFEOS_AUTH_PASSWORD | Required protected owner-workspace login secret. |
+| LIFEOS_DEMO_BUTTON | Enables the isolated demo entry button; demo sessions never receive live provider access. |
 | LIFEOS_DATABASE_URL | SQLite or PostgreSQL connection URL. |
 | LIFEOS_ALLOWED_ORIGINS | Browser origins allowed to call the API. |
 | LIFEOS_ENCRYPTION_KEY | Encrypts provider credentials at rest when configured. |
@@ -304,7 +305,7 @@ The current live workspace is:
 
 https://lifeos-live-production.up.railway.app
 
-It is password-protected. The container exposes /health and /ready, builds the frontend in a pinned Node stage, and serves the compiled assets from FastAPI. Railway settings live in [railway.json](railway.json); container details are in [Dockerfile](Dockerfile).
+The owner workspace is password-protected. When `LIFEOS_DEMO_BUTTON=true`, visitors can enter an isolated local-data demo without credentials; that session cannot access owner records or live provider adapters. The container exposes /health and /ready, builds the frontend in a pinned Node stage, and serves the compiled assets from FastAPI. Railway settings live in [railway.json](railway.json); container details are in [Dockerfile](Dockerfile).
 
 Deployment caveats are documented rather than hidden: the supported hosted boundary is single-worker and primary-owner focused, the Windows installer is unsigned, and managed external backup scheduling is not claimed as a universal production guarantee. See [docs/RELEASE_STATUS.md](docs/RELEASE_STATUS.md).
 

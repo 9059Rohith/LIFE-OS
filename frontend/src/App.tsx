@@ -277,6 +277,14 @@ export default function App() {
       await init();
     });
   }
+  async function enterDemo() {
+    await perform(async () => {
+      await api<Session>("/auth/demo", "POST", {});
+      setPassword("");
+      setUsername("");
+      await init();
+    });
+  }
   const primaryNavigation: [Page, typeof House, string][] = [
     ["overview", House, "Overview"],
     ["work", SquareCheckBig, "My work"],
@@ -365,6 +373,21 @@ export default function App() {
             Open workspace
             <ArrowRight size={17} />
           </button>
+          <div className="demo-access-divider" aria-hidden="true">
+            <span>or</span>
+          </div>
+          <button
+            className="button demo-access-button"
+            type="button"
+            disabled={busy}
+            onClick={() => void enterDemo()}
+          >
+            <Play size={16} />
+            Try interactive demo
+          </button>
+          <p className="demo-access-note">
+            Explore isolated sample data. No personal accounts or live messages are accessed.
+          </p>
           {error && (
             <p className="inline-error" role="alert">
               {error}

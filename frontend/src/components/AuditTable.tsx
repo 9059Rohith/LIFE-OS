@@ -14,6 +14,18 @@ export function AuditTable({
   setQuery: (value: string) => void;
   download: () => void;
 }) {
+  const usage =
+    typeof metrics.model_token_usage === "object" && metrics.model_token_usage !== null
+      ? (metrics.model_token_usage as Record<string, unknown>)
+      : {};
+  const inputTokens = typeof usage.input_tokens === "number" ? usage.input_tokens : 0;
+  const outputTokens = typeof usage.output_tokens === "number" ? usage.output_tokens : 0;
+  const totalTokens = typeof usage.total_tokens === "number" ? usage.total_tokens : inputTokens + outputTokens;
+  const latency =
+    typeof metrics.latency_ms === "object" && metrics.latency_ms !== null
+      ? (metrics.latency_ms as Record<string, unknown>)
+      : {};
+  const p95 = typeof latency.p95 === "number" ? latency.p95 : null;
   return (
     <>
       <div className="audit-tools">
@@ -95,24 +107,23 @@ export function AuditTable({
           <div className="metric-card" style={{ padding: "1rem", background: "var(--bg-layer-2)", borderRadius: "8px" }}>
             <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>Total Tokens</h4>
             <div style={{ fontSize: "1.5rem", fontWeight: "600" }}>
-              {(metrics.model_token_usage as any)?.total_tokens?.toLocaleString() || 0}
+              {totalTokens.toLocaleString()}
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
-              In: {(metrics.model_token_usage as any)?.input_tokens?.toLocaleString() || 0} | 
-              Out: {(metrics.model_token_usage as any)?.output_tokens?.toLocaleString() || 0}
+              In: {inputTokens.toLocaleString()} | Out: {outputTokens.toLocaleString()}
             </div>
           </div>
           <div className="metric-card" style={{ padding: "1rem", background: "var(--bg-layer-2)", borderRadius: "8px" }}>
             <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>Estimated Cost</h4>
             <div style={{ fontSize: "1.5rem", fontWeight: "600", color: "var(--color-primary)" }}>
-              ${(((metrics.model_token_usage as any)?.input_tokens || 0) * (0.150 / 1000000) + ((metrics.model_token_usage as any)?.output_tokens || 0) * (0.600 / 1000000)).toFixed(4)}
+              ${(inputTokens * (0.150 / 1000000) + outputTokens * (0.600 / 1000000)).toFixed(4)}
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>Based on gpt-4o-mini pricing</div>
           </div>
           <div className="metric-card" style={{ padding: "1rem", background: "var(--bg-layer-2)", borderRadius: "8px" }}>
             <h4 style={{ margin: "0 0 0.5rem 0", color: "var(--text-secondary)", fontSize: "0.85rem" }}>Latency (p95)</h4>
             <div style={{ fontSize: "1.5rem", fontWeight: "600" }}>
-              {(metrics.latency_ms as any)?.p95 ? `${(metrics.latency_ms as any).p95}ms` : 'N/A'}
+              {p95 === null ? "N/A" : `${p95}ms`}
             </div>
           </div>
         </div>

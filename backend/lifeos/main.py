@@ -172,15 +172,18 @@ def create_app(settings=None):
 
     def session_payload(session):
         preferences = engine.settings_for(session["owner"])
+        mode = session.get("mode", settings.mode)
         return {
             "user": {"id": session["owner"], "name": preferences["name"]},
             "csrf_token": session["csrf"],
-            "mode": settings.mode,
-            "voice_available": bool(settings.openai_api_key) and session["owner"] == "owner",
+            "mode": mode,
+            "voice_available": mode == "live" and bool(settings.openai_api_key) and session["owner"] == "owner",
         }
 
     def require_live_primary_owner(request, mutation=False):
         owner = security.require(request, mutation)
+        if security.mode(request) == "demo":
+            return owner
         if settings.mode == "live" and owner != "owner":
             raise HTTPException(403, "AUTHORIZATION_ERROR: primary owner required")
         return owner
@@ -208,6 +211,18 @@ def create_app(settings=None):
         if not owner:
             raise HTTPException(401, "AUTHENTICATION_ERROR: invalid credentials")
         return session_payload(security.create(response, owner))
+
+    @app.post("/api/auth/demo")
+    def demo_access(request: Request, response: Response):
+        security.rate("demo-login:" + (request.client.host if request.client else "unknown"), 10)
+        origin = request.headers.get("origin")
+        if origin and origin not in settings.allowed_origins:
+            raise HTTPException(403, "Origin rejected")
+        if not settings.demo_button:
+            raise HTTPException(404, "Demo access is disabled")
+        session = security.create(response, mode="demo")
+        seed(db, session["owner"])
+        return session_payload(session)
 
     @app.post("/api/auth/register")
     def register(body: RegistrationInput, request: Request, response: Response):
@@ -248,7 +263,7 @@ def create_app(settings=None):
     async def new_event(body: EventInput, request: Request):
         owner = require_live_primary_owner(request, True)
         async with engine.lock(owner):
-            return await engine.plan(owner, body.text, body.source, body.simulation)
+            return await engine.plan(owner, body.text, body.source, body.simulation, mode=security.mode(request))
 
     @app.get("/api/events/{id}")
     def event(id: str, request: Request):
@@ -296,7 +311,7 @@ def create_app(settings=None):
     @app.post("/api/demo/reset")
     async def reset(request: Request):
         owner = security.require(request, True)
-        if settings.mode != "demo":
+        if security.mode(request) != "demo":
             raise HTTPException(403, "Demo is disabled in live mode")
         async with engine.lock(owner):
             seed(db, owner)
@@ -307,7 +322,7 @@ def create_app(settings=None):
     @app.post("/api/demo/run")
     async def run_demo(body: DemoInput, request: Request):
         owner = security.require(request, True)
-        if settings.mode != "demo":
+        if security.mode(request) != "demo":
             raise HTTPException(403, "Demo is disabled in live mode")
         async with engine.lock(owner):
             seed(db, owner)
@@ -316,7 +331,11 @@ def create_app(settings=None):
                     event["status"] = "cancelled"
                     engine.save(owner, event)
             return await engine.plan(
-                owner, SCENARIOS[body.scenario], "gmail" if body.scenario == "flight" else "discord", False
+                owner,
+                SCENARIOS[body.scenario],
+                "gmail" if body.scenario == "flight" else "discord",
+                False,
+                mode="demo",
             )
 
     @app.post("/api/events/{id}/approve")
@@ -457,7 +476,7 @@ def create_app(settings=None):
     @app.get("/api/demo/apps")
     def apps(request: Request):
         owner = security.require(request)
-        if settings.mode != "demo":
+        if security.mode(request) != "demo":
             return []
         return [item for item in db.list(owner, "app") if item["application"] in APPS]
 
@@ -513,6 +532,18 @@ def create_app(settings=None):
     @app.get("/api/integrations")
     async def integrations(request: Request):
         owner = require_live_primary_owner(request)
+        session_mode = security.mode(request)
+        if session_mode == "demo":
+            return [
+                {
+                    "id": key,
+                    "name": name,
+                    "status": "local_demo",
+                    "mode": "demo",
+                    "description": "Persistent local application records; no third-party account accessed.",
+                }
+                for key, name in APPS.items()
+            ]
         google = bool(await token_loader(owner, "google"))
         snapshot = db.get(owner, "integration_check", owner + ":integration_check")
         fresh = bool(snapshot and 0 <= time.time() - snapshot.get("checked_at", 0) < 86400)

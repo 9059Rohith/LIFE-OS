@@ -108,6 +108,37 @@ def test_live_auth_and_guard(tmp_path):
         assert c.get("/api/demo/apps").json() == []
 
 
+def test_live_workspace_can_enter_isolated_demo_without_owner_login(tmp_path):
+    settings = Settings(
+        mode="live",
+        auth_password="a-strong-test-password-only",
+        encryption_key=Fernet.generate_key().decode(),
+        database_url=f"sqlite:///{tmp_path}/live-demo-button.db",
+    )
+    with TestClient(create_app(settings)) as c:
+        assert c.get("/api/session").status_code == 401
+        entered = c.post("/api/auth/demo")
+        assert entered.status_code == 200
+        assert entered.json()["mode"] == "demo"
+        assert entered.json()["user"]["id"] != "owner"
+        c.headers["X-CSRF-Token"] = entered.json()["csrf_token"]
+
+        event = c.post("/api/demo/run", json={"scenario": "flight"})
+        assert event.status_code == 200
+        payload = event.json()
+        approved = c.post(
+            f"/api/events/{payload['id']}/approve",
+            json={
+                "version": payload["version"],
+                "action_ids": [a["id"] for a in payload["actions"] if a["requires_approval"]],
+            },
+        )
+        assert approved.status_code == 200
+        resolved = c.post(f"/api/events/{payload['id']}/execute")
+        assert resolved.status_code == 200
+        assert resolved.json()["status"] == "resolved"
+
+
 def test_registered_users_receive_isolated_sessions_and_work_records(tmp_path):
     settings = Settings(
         mode="live",

@@ -93,13 +93,14 @@ class Security:
             return None
         return session
 
-    def create(self, response, owner=None):
+    def create(self, response, owner=None, mode=None):
         self.db.prune_sessions()
         token = secrets.token_urlsafe(32)
         session = {
             "owner": owner or secrets.token_hex(16),
             "csrf": secrets.token_urlsafe(32),
             "expires": time.time() + self.settings.session_seconds,
+            "mode": mode or self.settings.mode,
         }
         self.db.put("system", "session", self.token_hash(token), session)
         response.set_cookie(
@@ -112,6 +113,10 @@ class Security:
             path="/",
         )
         return session
+
+    def mode(self, request):
+        session = self.session(request)
+        return session.get("mode", self.settings.mode) if session else None
 
     def require(self, request, mutation=False):
         session = self.session(request)

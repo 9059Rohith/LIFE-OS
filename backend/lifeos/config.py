@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     auth_password: str = ""
     user_registration: bool = False
     public_demo: bool = False
+    demo_button: bool = True
     encryption_key: str = ""
     allowed_origins: list[str] = [
         "http://localhost:5173",

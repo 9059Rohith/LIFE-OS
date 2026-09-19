@@ -112,13 +112,14 @@ class Engine:
             "retention_days": 30,
         }
 
-    async def plan(self, owner, text, source, simulation, source_record_id=None):
+    async def plan(self, owner, text, source, simulation, source_record_id=None, mode=None):
         started = time.perf_counter()
+        execution_mode = mode or self.settings.mode
         preferences = self.settings_for(owner)
         self.db.prune_events(owner, preferences["retention_days"])
         self.db.prune_sessions()
         entities = extract(text, preferences["timezone"])
-        if self.settings.mode == "demo":
+        if execution_mode == "demo":
             if not self.db.list(owner, "app"):
                 seed(self.db, owner)
             context = [
@@ -165,8 +166,10 @@ class Engine:
                     502, "TOOL_ERROR: context retrieval failed; check connected providers"
                 ) from None
         event = make_plan(
-            text, source, simulation, entities, context, preferences["timezone"], self.settings.mode
+            text, source, simulation, entities, context, preferences["timezone"], execution_mode
         )
+        if execution_mode != self.settings.mode:
+            event["execution_mode"] = execution_mode
         if source_record_id is not None:
             event["source_ref"] = {"application": source, "record_id": source_record_id}
         self.log(
@@ -381,7 +384,7 @@ class Engine:
             raise HTTPException(404, "Action not found")
         result = action.get("provider_result")
         if (
-            self.settings.mode != "live"
+            event.get("execution_mode", self.settings.mode) != "live"
             or event.get("simulation")
             or action["status"] != "uncertain"
             or not isinstance(result, dict)
@@ -403,9 +406,9 @@ class Engine:
             self.log(owner, event, "verification_failed", "Provider still does not confirm the action; manual review required", action["application"])
         return self.save(owner, event)
 
-    async def try_whatsapp_uncertain_readback(self, action, exc):
+    async def try_whatsapp_uncertain_readback(self, event, action, exc):
         if (
-            self.settings.mode != "live"
+            event.get("execution_mode", self.settings.mode) != "live"
             or action["application"] != "whatsapp"
             or action["type"] != "send"
             or not (bool(getattr(exc, "uncertain", False)) or isinstance(exc, TimeoutError))
@@ -453,7 +456,7 @@ class Engine:
         for a in selected:
             self.validate_approval(event, a)
         # Validate all local optimistic preconditions before any mutation.
-        if self.settings.mode == "demo":
+        if event.get("execution_mode", self.settings.mode) == "demo":
             for a in selected:
                 if a["application"] == "calendar":
                     record = self.local_record(owner, "calendar", a["arguments"]["event_id"])
@@ -469,7 +472,7 @@ class Engine:
                         )
         if not pending:
             return event
-        if self.settings.mode == "live":
+        if event.get("execution_mode", self.settings.mode) == "live":
             try:
                 await asyncio.wait_for(self.providers.preflight(owner, selected), 50)
             except Exception as exc:
@@ -516,7 +519,7 @@ class Engine:
             try:
                 if a["attempts"] > 3:
                     raise HTTPException(409, "Maximum attempts reached")
-                if self.settings.mode == "demo":
+                if event.get("execution_mode", self.settings.mode) == "demo":
                     result = self.execute_local(owner, a, key)
                     evidence = self.verify_local(owner, a, result)
                 else:
@@ -559,7 +562,7 @@ class Engine:
             except Exception as exc:
                 # No provider exception body is exposed: it may contain tokens or private payloads.
                 duration_ms = round((time.perf_counter() - started) * 1000, 2)
-                if await self.try_whatsapp_uncertain_readback(a, exc):
+                if await self.try_whatsapp_uncertain_readback(event, a, exc):
                     self.log(
                         owner,
                         event,
@@ -664,7 +667,7 @@ class Engine:
         }
 
     async def undo(self, owner, event):
-        if self.settings.mode != "demo":
+        if event.get("execution_mode", self.settings.mode) != "demo":
             return await self.undo_live(owner, event)
         count = 0
         for a in reversed(event["actions"]):

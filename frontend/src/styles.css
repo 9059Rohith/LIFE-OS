@@ -3034,6 +3034,11 @@ input:focus, textarea:focus, select:focus { border-color: var(--ui-accent); box-
 .login-card .field-note { color: rgba(193, 229, 211, .52); }
 .login-card .button.primary { color: #06150e; background: #86ffd0; border-color: #86ffd0; box-shadow: 0 10px 30px rgba(91, 255, 191, .18); }
 .login-card .button.primary:hover { background: #b0ffe2; }
+.demo-access-divider { display: flex; align-items: center; gap: 10px; color: rgba(193, 229, 211, .42); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; }
+.demo-access-divider::before, .demo-access-divider::after { content: ""; height: 1px; flex: 1; background: rgba(135, 255, 208, .14); }
+.demo-access-button { color: #d9ffed; border-color: rgba(135, 255, 208, .25); background: rgba(135, 255, 208, .06); }
+.demo-access-button:hover { color: #06150e; border-color: #86ffd0; background: #86ffd0; }
+.demo-access-note { margin: -6px 0 0; color: rgba(193, 229, 211, .5) !important; font-size: 10px !important; line-height: 1.55 !important; text-align: center; }
 html[data-theme="light"] .login-screen { background: linear-gradient(145deg, #092018, #1b4c37 52%, #0a1b14); }
 @keyframes atmosphere-drift { from { transform: translate3d(-2%, -1%, 0) rotate(0deg); } to { transform: translate3d(2%, 1%, 0) rotate(7deg); } }
 @keyframes orbit-float { 0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); } 50% { transform: translate3d(-20px, 14px, 0) rotate(8deg); } }
