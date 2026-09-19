@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from lifeos.config import Settings
 from lifeos.engine import Engine
 from lifeos.main import create_app
+from lifeos.providers import ProviderError
 from lifeos.store import Database, digest
 
 
@@ -29,6 +30,32 @@ class ReadbackProvider:
         assert result["id"] == "provider-message-1"
         assert result["channel_id"] == "approved-channel"
         return {"verified": self.reads > 1, "provider_id": self.reported_id or result["id"], "detail": "Provider read-back"}
+
+
+class WhatsAppUncertainProvider:
+    def __init__(self):
+        self.sends = 0
+        self.reads = 0
+
+    async def preflight(self, *_args):
+        return None
+
+    async def execute(self, *_args):
+        self.sends += 1
+        raise ProviderError("Desktop WhatsApp send result was invalid", "VERIFICATION_ERROR", True)
+
+    async def verify(self, *_args):
+        raise AssertionError("uncertain WhatsApp send should be resolved by exact body read-back")
+
+    async def verify_whatsapp_delivery_by_body(self, body):
+        self.reads += 1
+        assert body == "LIFEOS acceptance message"
+        return {
+            "verified": True,
+            "provider_id": "wa-message-1",
+            "detail": "WhatsApp uncertain send confirmed by exact outgoing conversation read-back",
+            "observed_status": "Read",
+        }
 
 
 @pytest.mark.asyncio
@@ -64,6 +91,40 @@ async def test_uncertain_send_can_be_rechecked_by_provider_id_without_resending(
     assert provider.sends == 1
     assert provider.reads == 2
     assert engine.event("owner", "event-1")["status"] == "resolved"
+
+
+@pytest.mark.asyncio
+async def test_uncertain_whatsapp_send_uses_exact_body_readback_without_resending(tmp_path):
+    args = {"contact": "Family", "body": "LIFEOS acceptance message"}
+    provider = WhatsAppUncertainProvider()
+    db = Database(f"sqlite:///{tmp_path}/whatsapp-readback.db")
+    settings = type("Settings", (), {"mode": "live", "approval_seconds": 600})()
+    engine = Engine(db, settings, provider)
+    action = {
+        "id": "action-1", "application": "whatsapp", "type": "send", "title": "Notify",
+        "status": "approved", "requires_approval": True, "risk": "medium", "reversible": False,
+        "dependencies": [], "arguments": args, "arguments_hash": digest(args), "evidence": None,
+        "approval": {"version": 1, "hash": digest(args), "expires": time.time() + 600},
+    }
+    event = {
+        "id": "event-1", "version": 1, "status": "approved", "simulation": False,
+        "actions": [action], "context": [], "timeline": [], "summary": "",
+    }
+    engine.save("owner", event)
+
+    result = await engine.execute("owner", event)
+
+    assert result["status"] == "resolved"
+    assert result["actions"][0]["status"] == "verified"
+    assert result["actions"][0]["provider_result"] == {
+        "id": "wa-message-1",
+        "contact": "Family",
+        "body": "LIFEOS acceptance message",
+        "idempotency_key": result["actions"][0]["idempotency_key"],
+    }
+    assert result["actions"][0]["evidence"]["observed_status"] == "Read"
+    assert provider.sends == 1
+    assert provider.reads == 1
 
 
 @pytest.mark.asyncio

@@ -42,6 +42,12 @@ class Engine:
             async with local_lock:
                 yield
 
+    def locked(self, owner):
+        if self.redis:
+            return False
+        local_lock = self.locks.get(owner)
+        return bool(local_lock and local_lock.locked())
+
     def event(self, owner, id):
         event = self.db.get(owner, "event", id)
         if not event:
@@ -397,6 +403,37 @@ class Engine:
             self.log(owner, event, "verification_failed", "Provider still does not confirm the action; manual review required", action["application"])
         return self.save(owner, event)
 
+    async def try_whatsapp_uncertain_readback(self, action, exc):
+        if (
+            self.settings.mode != "live"
+            or action["application"] != "whatsapp"
+            or action["type"] != "send"
+            or not (bool(getattr(exc, "uncertain", False)) or isinstance(exc, TimeoutError))
+            or not hasattr(self.providers, "verify_whatsapp_delivery_by_body")
+        ):
+            return False
+        try:
+            evidence = await asyncio.wait_for(
+                self.providers.verify_whatsapp_delivery_by_body(action.get("arguments", {}).get("body", "")),
+                15,
+            )
+        except Exception:
+            return False
+        if evidence.get("verified") is not True or not evidence.get("provider_id"):
+            return False
+        receipt = {
+            "id": evidence["provider_id"],
+            "contact": action.get("arguments", {}).get("contact"),
+            "body": action.get("arguments", {}).get("body"),
+        }
+        if action.get("idempotency_key"):
+            receipt["idempotency_key"] = action["idempotency_key"]
+        action["provider_result"] = receipt
+        action["evidence"] = evidence
+        action["status"] = "verified"
+        action["error"] = None
+        return True
+
     async def execute(self, owner, event, retry=False):
         if event["simulation"] or event["status"] in [
             "blocked",
@@ -521,6 +558,19 @@ class Engine:
                 )
             except Exception as exc:
                 # No provider exception body is exposed: it may contain tokens or private payloads.
+                duration_ms = round((time.perf_counter() - started) * 1000, 2)
+                if await self.try_whatsapp_uncertain_readback(a, exc):
+                    self.log(
+                        owner,
+                        event,
+                        "verified",
+                        a["evidence"].get("detail", "WhatsApp exact read-back confirmed delivery"),
+                        a["application"],
+                        duration_ms,
+                    )
+                    self.save(owner, event)
+                    await asyncio.sleep(0)
+                    continue
                 uncertain = (
                     a["type"] == "send"
                     or bool(getattr(exc, "uncertain", False))
@@ -539,7 +589,7 @@ class Engine:
                     "failed",
                     a["error"],
                     a["application"],
-                    round((time.perf_counter() - started) * 1000, 2),
+                    duration_ms,
                 )
             self.save(owner, event)
             await asyncio.sleep(0)

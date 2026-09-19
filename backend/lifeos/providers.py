@@ -111,6 +111,28 @@ class LiveProviders:
             self._whatsapp = WhatsAppWorker(self.settings)
         return await self._whatsapp.read_recent(self.settings.whatsapp_contact)
 
+    async def verify_whatsapp_delivery_by_body(self, body: str):
+        if not isinstance(body, str) or not body.strip() or len(body) > 4000:
+            raise ProviderError("WhatsApp message is invalid", "VALIDATION_ERROR")
+        snapshot = await self.read_whatsapp_messages()
+        matches = [
+            item
+            for item in snapshot.get("items", [])
+            if item.get("outgoing") is True and item.get("content") == body and item.get("id")
+        ]
+        if len(matches) != 1:
+            return {
+                "verified": False,
+                "detail": "WhatsApp exact outgoing read-back was not unique; manual review required",
+            }
+        match = matches[0]
+        return {
+            "verified": True,
+            "detail": "WhatsApp uncertain send confirmed by exact outgoing conversation read-back",
+            "provider_id": match["id"],
+            "observed_status": match.get("status", ""),
+        }
+
     async def _google_headers(self, user_id):
         async with self._google_lock:
             token = await self.token_loader(user_id, "google")

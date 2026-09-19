@@ -46,7 +46,7 @@ def register_privacy(app, db, security, engine, pause_ingestion=None):
     @app.post("/api/privacy/delete")
     async def remove(body: DeletionConfirmation, request: Request, response: Response):
         owner = security.require(request, True)
-        if engine.lock(owner).locked():
+        if engine.locked(owner):
             raise HTTPException(409, "Wait for the current operation to finish before deleting data")
         if pause_ingestion:
             await pause_ingestion(owner)
