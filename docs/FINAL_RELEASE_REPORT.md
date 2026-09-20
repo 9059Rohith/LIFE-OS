@@ -9,7 +9,7 @@ This report separates verified readiness from external submission caveats. It is
 - Premium reviewer documentation: architecture, AI usage, security, hackathon alignment, ScreenOps benchmark review, demo script, subtitles, screenshots and poster.
 - GitHub-published release assets, including the final demo video, screenshots and poster.
 - An authenticated 4:00 light-mode live-site demo generated from the running app with female narration and animated-fade subtitles.
-- Railway service `lifeos-live` is publicly reachable at `https://lifeos-live-production.up.railway.app`; the current checkout was uploaded as deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b` and passed post-deploy health, readiness, homepage, login, and authenticated-session checks.
+- Railway service `lifeos-live` is publicly reachable at `https://lifeos-live-production.up.railway.app`; the final checkout was uploaded as the current hosted deployment and passed post-deploy health, readiness, homepage, login, and authenticated-session checks.
 
 ## Verified locally
 

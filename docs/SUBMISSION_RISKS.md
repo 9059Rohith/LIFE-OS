@@ -4,11 +4,11 @@
 
 ### Historical credential exposure (resolved)
 
-A pre-scrub public commit (`972f027`) placed a credential-like value in the README URL. The public `main` history has been rewritten and force-updated so that value is no longer reachable from the submission branch. Railway deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b` was restarted with a replacement credential: the replacement login and authenticated session returned 200, while the historical credential returned 401. The replacement remains only in the ignored local `.private` directory. Do not publish it in README, judge guides, issues, or video descriptions.
+A pre-scrub public commit (`972f027`) placed a credential-like value in the README URL. The public `main` history has been rewritten and force-updated so that value is no longer reachable from the submission branch. The current Railway deployment accepts the replacement credential: the replacement login and authenticated session returned 200, while the historical credential returned 401. The replacement remains only in the ignored local `.private` directory. Do not publish it in README, judge guides, issues, or video descriptions.
 
 ### Hosted revision drift (verified for current release)
 
-The public Railway service and the current GitHub source are separate release artifacts. For the current release, checkout commit `81ec67f` was uploaded to Railway and deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b` passed `/health`, `/ready`, homepage, login, and authenticated session checks. Re-run those checks after any future deployment.
+The public Railway service and the current GitHub source are separate release artifacts. For the current release, the final checkout was uploaded to Railway and passed `/health`, `/ready`, homepage, login, and authenticated session checks. Re-run those checks after any future deployment.
 
 ### WhatsApp desktop dependency
 

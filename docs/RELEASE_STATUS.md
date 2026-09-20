@@ -2,7 +2,7 @@
 
 This document separates verified evidence from remaining operational boundaries. It is not a claim of zero defects or universal production readiness.
 
-Post-deploy verification on 20 September 2026: checkout commit `81ec67f` was uploaded as Railway deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b`. The public `/health`, `/ready`, homepage, rotated-credential login, and authenticated `/api/session` checks returned success; the historical credential returned 401. This verifies the current service deployment and authentication boundary. It does not claim a fresh external provider mutation, which remains account- and companion-dependent.
+Post-deploy verification on 20 September 2026: the final checkout was uploaded as the current Railway deployment. The public `/health`, `/ready`, homepage, rotated-credential login, and authenticated `/api/session` checks returned success; the historical credential returned 401. This verifies the current service deployment and authentication boundary. It does not claim a fresh external provider mutation, which remains account- and companion-dependent.
 
 # LIFEOS release status — 18 September 2026
 
