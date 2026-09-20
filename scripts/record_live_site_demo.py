@@ -347,8 +347,11 @@ def record_live_site() -> Path:
         )
         page = context.new_page()
 
-        scene_started = time.monotonic()
+        capture_started = time.monotonic()
         login(page)
+        lead_seconds = time.monotonic() - capture_started
+        (OUT_DIR / "lead_seconds.txt").write_text(f"{lead_seconds:.3f}\n", encoding="utf-8")
+        scene_started = time.monotonic()
         safe_click(page, "Overview", 1400)
         prompt = page.locator("textarea").first
         if prompt.is_visible(timeout=3000):
@@ -470,10 +473,13 @@ def record_live_site() -> Path:
 
 def mux_final(raw_video: Path) -> None:
     ass_path = FINAL_ASS.relative_to(ROOT).as_posix()
+    lead_seconds = float((OUT_DIR / "lead_seconds.txt").read_text(encoding="utf-8").strip())
     run(
         [
             FFMPEG,
             "-y",
+            "-ss",
+            f"{lead_seconds:.3f}",
             "-i",
             str(raw_video),
             "-i",
