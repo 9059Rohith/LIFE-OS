@@ -46,7 +46,7 @@ This report separates verified readiness from external submission caveats. It is
 
 - Optional: upload the demo video to a streaming host if the hackathon form rejects a GitHub-hosted video artifact.
 - Confirm that the public hosted revision matches the current GitHub commit before treating every current control as deployed.
-- Rotate any credential that appeared in repository history and purge the historical value before public submission.
+- A replacement Railway workspace credential has been submitted without printing or committing it; verify the active deployment accepts it, then purge the historical value from public repository history before submission.
 
 ## Current release position
 
