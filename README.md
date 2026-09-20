@@ -24,6 +24,10 @@
   <a href="SECURITY.md">🛡️ <strong>Security</strong></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/9059Rohith/LIFE-OS">💻 <strong>Source code</strong></a>
+  &nbsp;·&nbsp;
+  <a href="JUDGES.md">🧑‍⚖️ <strong>Judge guide</strong></a>
+  &nbsp;·&nbsp;
+  <a href="SUBMISSION.md">📋 <strong>Submission</strong></a>
 </p>
 
 <p align="center">
@@ -878,6 +882,200 @@ On purpose. A controlled, demonstrable workflow you can trust beats a broad one 
 <br/>
 
 The repository file is the verified artifact. If a submission platform requires a streaming host, upload the same file there rather than substituting a different recording.
+| Suite | Result |
+| --- | --- |
+| 🔎 Frontend typecheck (`npm run typecheck`) | ✅ Passed |
+| 🧹 Frontend lint (`npm run lint`) | ✅ Passed |
+| 🏗️ Frontend build (`npm run build`) | ✅ Passed |
+| 🎭 Frontend end-to-end (`npm run test:e2e`) | ✅ 15 passed, 1 skipped |
+| 🧪 Backend tests | ✅ 140 (see the final release report) |
+
+</div>
+
+📄 The [final release report](docs/FINAL_RELEASE_REPORT.md) records broader release evidence, including 141 backend tests, offline extraction evals, security and dependency scans, desktop tests, Docker checks, hosted health and readiness checks, and the recorded Calendar → Discord → WhatsApp acceptance workflow.
+
+### ▶️ Run it yourself
+
+```bash
+python -m pytest -q
+python -m ruff check backend tests scripts
+python -m mypy --strict backend/lifeos/policy.py backend/lifeos/schemas.py backend/lifeos/config.py
+npm --prefix frontend run lint
+npm --prefix frontend run build
+npm --prefix desktop test
+python scripts/scan_secrets.py
+```
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:3967a5,100:1f8f61&height=3&section=header" width="100%"/>
+
+## 🚢 Deployment
+
+The current live workspace is:
+
+<div align="center">
+
+### 🌐 **<https://lifeos-live-production.up.railway.app>**
+
+</div>
+
+- 🔒 The owner workspace is password-protected.
+- 🕹️ When `LIFEOS_DEMO_BUTTON=true`, visitors can enter an isolated local-data demo without credentials. That session cannot access owner records or live provider adapters.
+- 💓 The container exposes `/health` and `/ready`, builds the frontend in a pinned Node stage, and serves the compiled assets from FastAPI.
+- 🚂 Railway settings live in [railway.json](railway.json). Container details are in the [Dockerfile](Dockerfile).
+
+> 📌 Deployment caveats are documented rather than hidden: the supported hosted boundary is single-worker and primary-owner focused, the Windows installer is unsigned, and managed external backup scheduling is not claimed as a universal production guarantee. See [docs/RELEASE_STATUS.md](docs/RELEASE_STATUS.md).
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:1f8f61,100:3967a5&height=3&section=header" width="100%"/>
+
+## 🗺️ Repository map
+
+```text
+LIFE-OS/
+├── frontend/       🖥️  React command center, components, styles, Playwright tests
+├── backend/        ⚡  FastAPI routes, workflow engine, providers, security, storage
+├── desktop/        🖥️  Electron companion and provider bridge
+├── tests/          🧪  Backend, provider, recovery, security, and integration tests
+├── docs/           📖  Architecture, release evidence, screenshots, poster, demo assets
+├── scripts/        🛠️  Verification, capture, recovery, packaging, and deployment helpers
+├── Dockerfile      🐳  Multi-stage production image
+├── docker-compose.yml
+├── .env.example    🔐  Safe configuration template
+├── ARCHITECTURE.md
+├── AI_USAGE.md
+├── SECURITY.md
+└── README.md
+```
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:3967a5,100:1f8f61&height=3&section=header" width="100%"/>
+
+## 🏆 Hackathon fit: Next-Gen Productivity and Automation
+
+### 🎯 Track goals
+
+| Track goal | LIFE-OS evidence |
+| --- | --- |
+| 🔁 Automate repetitive work | One schedule change can prepare coordinated Calendar, Gmail, Discord, and WhatsApp actions. |
+| 🧵 Streamline workflows | A single reviewed plan replaces repeated context lookup, drafting, and coordination. |
+| 🗂️ Organize information | Events, provider context, action evidence, work records, reminders, and audit history are surfaced together. |
+| 🚀 Move people faster | The product reduces manual coordination while keeping high-impact decisions visible and human-approved. |
+| 🤖 Use AI meaningfully | AI assists structured event interpretation inside a server-controlled boundary. It does not receive arbitrary execution authority. |
+| 🔬 Demonstrate reliability | Approval hashes, idempotency, read-back verification, uncertain states, and audit evidence make the workflow inspectable. |
+
+### 🏅 Against typical judging criteria
+
+| Criterion | Where to look |
+| --- | --- |
+| 💡 **Innovation** | The consequence-graph model and the AI-proposes, server-decides boundary. See [AI and agent boundary](#-ai-and-agent-boundary). |
+| 🔬 **Technical depth** | Approval hashing, idempotent execution, owner locks, crash-to-uncertain recovery, and read-back verification. See [Reliability and failure handling](#️-reliability-and-failure-handling). |
+| 🌍 **Real-world impact** | Reduces the coordination cost of every schedule change across Calendar, Gmail, Discord, and WhatsApp. |
+| 🧩 **Completeness** | Web app, desktop companion, live deployment, demo video, poster, and documentation set. |
+| 🛡️ **Quality and trust** | 141 backend tests, offline extraction evals, Playwright end-to-end tests, security and dependency scans, and a documented threat model. |
+| 🎨 **Presentation** | Poster, full product tour, narrated demo with subtitles, and a three-minute evaluation path. |
+
+📖 See [docs/HACKATHON_ALIGNMENT.md](docs/HACKATHON_ALIGNMENT.md), [docs/COMPETITOR_SCORECARD.md](docs/COMPETITOR_SCORECARD.md), and [docs/PRIVACY_BOUNDARY.md](docs/PRIVACY_BOUNDARY.md).
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:1f8f61,100:3967a5&height=3&section=header" width="100%"/>
+
+## 📊 How LIFE-OS compares
+
+| Capability | 📏 Rule-based automation | 🤖 Autonomous AI agent | 🟢 **LIFE-OS** |
+| --- | --- | --- | --- |
+| Handles changes nobody pre-configured | Limited | Yes | **Yes, within supported event shapes** |
+| Reasons about cross-application consequences | No | Varies | **Yes, as a typed consequence graph** |
+| Human sees exact arguments before anything runs | Rarely | Rarely | **Always for high-impact actions** |
+| Approval is bound to exact content | No | No | **Yes, hashed to arguments and event version** |
+| AI output can execute directly | No | Often | **Never** |
+| Confirms the outcome independently | Rarely | Rarely | **Provider read-back before verified** |
+| Surfaces ambiguous outcomes honestly | Rarely | Rarely | **Explicit uncertain state** |
+| Auditable evidence trail | Varies | Varies | **Tamper-evident audit chain** |
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:3967a5,100:1f8f61&height=3&section=header" width="100%"/>
+
+## 🧭 Limitations and next steps
+
+### ✅ Implemented and documented
+
+- 🏠 Local live-mode workspace with owner-scoped persistence.
+- 🔏 Approval-bound planning and execution lifecycle.
+- 🌐 Provider context, action dependencies, read-back verification, and audit evidence.
+- 🔌 Google, Discord, WhatsApp, Drive, voice, work-record, and desktop integration boundaries.
+- 📱 Responsive web UI, optional dark mode, and Electron companion.
+- 🧪 Automated backend, frontend, desktop, security, recovery, build, and dependency checks.
+
+### 🚧 Boundaries to understand
+
+- 🎯 The product is optimized for a narrow class of schedule-change and consequence workflows.
+- 🔑 Provider actions require valid credentials, configured destinations, permissions, and in some cases the connected Windows companion.
+- ☁️ The hosted deployment is not positioned as a horizontally scaled, multi-tenant SaaS.
+- 🖊️ The Windows installer is unsigned on the current release line.
+- 🎥 External submission platforms may require the repository demo video to be uploaded to a streaming host.
+
+### 🛤️ Next steps
+
+Directions that follow directly from the boundaries above:
+
+- ✍️ Sign the Windows installer.
+- 🏗️ Harden the hosted boundary toward horizontal scale and multi-tenant use.
+- 💾 Add managed, scheduled external backups.
+- 🧬 Extend supported event shapes beyond schedule changes while keeping the same approval and verification guarantees.
+
+<img src="https://capsule-render.vercel.app/api?type=rect&color=0:1f8f61,100:3967a5&height=3&section=header" width="100%"/>
+
+## ❓ FAQ
+
+<details>
+<summary>❓ <strong>Why not just use a general autonomous agent?</strong></summary>
+<br/>
+
+Open-ended agents are powerful, but giving one write access to calendar, email, and messaging is a trust problem. LIFE-OS keeps AI on the understanding side and puts every action behind server-built plans, exact-argument approval, bounded execution, and read-back verification.
+
+</details>
+
+<details>
+<summary>❓ <strong>Can the AI send a message or change an event by itself?</strong></summary>
+<br/>
+
+**No.** AI output is never executable authority. The server constructs the actions, and high-impact writes require an approval that matches the current plan.
+
+</details>
+
+<details>
+<summary>❓ <strong>Does it work without an OpenAI key?</strong></summary>
+<br/>
+
+**Yes**, for supported event shapes. Event extraction is deterministic first. The OpenAI-compatible key is optional and is used for constrained structured extraction and voice services when deterministic parsing is not enough.
+
+</details>
+
+<details>
+<summary>❓ <strong>What happens if a provider is down or a delivery cannot be confirmed?</strong></summary>
+<br/>
+
+Retries are bounded. If an outcome cannot be confirmed, the action becomes an explicit **uncertain** state routed to manual review. It is never reported as verified without provider read-back.
+
+</details>
+
+<details>
+<summary>❓ <strong>Is the live demo safe to click around in?</strong></summary>
+<br/>
+
+**Yes.** The interactive demo uses isolated sample data. Demo sessions cannot access owner records or live provider adapters.
+
+</details>
+
+<details>
+<summary>❓ <strong>Why is the scope so narrow?</strong></summary>
+<br/>
+
+On purpose. A controlled, demonstrable workflow you can trust beats a broad one you cannot inspect. The guarantees here (approval integrity, verification, honest failure states) are the product.
+
+</details>
+
+<details>
+<summary>❓ <strong>Why is the demo video a repository file and not a streaming link?</strong></summary>
+<br/>
+
+The repository file is the verified artifact. If a submission platform requires a streaming host, upload the same file there rather than substituting a different recording.
 
 </details>
 
@@ -885,6 +1083,8 @@ The repository file is the verified artifact. If a submission platform requires 
 
 ## 📖 Documentation
 
+- 🧑‍⚖️ [**Judge guide** — start here if you are evaluating](JUDGES.md)
+- 📋 [**Submission** — clean one-page project narrative](SUBMISSION.md)
 - 🏛️ [Architecture](ARCHITECTURE.md)
 - 🤖 [AI usage and model boundary](AI_USAGE.md)
 - 🔐 [Security policy](SECURITY.md)
