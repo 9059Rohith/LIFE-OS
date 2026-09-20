@@ -136,14 +136,14 @@ All integrations use owner-scoped OAuth or bot tokens, are bounded to allowliste
 
 ---
 
-## Why This Wins
+## Why This Is Defensible
 
 1. **Architecture depth** — consequence graph + approval hashing + read-back verification is a production-grade pattern, not a demo trick
 2. **Honest engineering** — `uncertain` state, explicit failure handling, tamper-evident audit trail
-3. **Breadth of integrations** — 5 real providers, not mocked
-4. **Test coverage** — 156+ tests across backend, desktop, e2e, and evals
+3. **Breadth of integrations** — five bounded provider surfaces, with live read evidence and provider-specific write boundaries documented
+4. **Test evidence** — 141 backend tests, 15 browser passes, 8 desktop tests, and 6/6 offline extraction evaluations
 5. **Security discipline** — CSRF, origin validation, approval hashes, idempotency keys, credential encryption
-6. **Full delivery** — web app + desktop app + live deployment + demo video + poster + 47 docs
+6. **Full delivery** — web app, desktop companion, hosted workspace, demo video, poster, screenshots, and evidence-led documentation
 
 ---
 

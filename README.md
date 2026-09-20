@@ -31,7 +31,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-verified%20release-1f8f61?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Verified release" />
+  <img src="https://img.shields.io/badge/status-evidence%20backed%20release-1f8f61?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Evidence-backed release" />
   <img src="https://img.shields.io/badge/track-Next--Gen%20Productivity%20%26%20Automation-3967a5?style=for-the-badge&logo=rocket&logoColor=white" alt="Hackathon track" />
   <img src="https://img.shields.io/badge/backend%20tests-141%20passing-1f8f61?style=for-the-badge&logo=pytest&logoColor=white" alt="141 backend tests passing" />
   <br/>
@@ -694,11 +694,11 @@ The complete safe template is [.env.example](.env.example). Important variables 
 | 🧹 Frontend lint (`npm run lint`) | ✅ Passed |
 | 🏗️ Frontend build (`npm run build`) | ✅ Passed |
 | 🎭 Frontend end-to-end (`npm run test:e2e`) | ✅ 15 passed, 1 skipped |
-| 🧪 Backend tests | ✅ 140 (see the final release report) |
+| 🧪 Backend tests | ✅ 141 passed (see the final release report) |
 
 </div>
 
-📄 The [final release report](docs/FINAL_RELEASE_REPORT.md) records broader release evidence, including 141 backend tests, offline extraction evals, security and dependency scans, desktop tests, Docker checks, hosted health and readiness checks, and the recorded Calendar → Discord → WhatsApp acceptance workflow.
+📄 The [final release report](docs/FINAL_RELEASE_REPORT.md) records broader release evidence, including 141 backend tests, offline extraction evals, security and dependency scans, desktop tests, Docker checks, hosted health and readiness checks, and a recorded Calendar → Discord → WhatsApp acceptance run. Hosted revision parity remains an explicit release check.
 
 ### ▶️ Run it yourself
 
@@ -888,11 +888,11 @@ The repository file is the verified artifact. If a submission platform requires 
 | 🧹 Frontend lint (`npm run lint`) | ✅ Passed |
 | 🏗️ Frontend build (`npm run build`) | ✅ Passed |
 | 🎭 Frontend end-to-end (`npm run test:e2e`) | ✅ 15 passed, 1 skipped |
-| 🧪 Backend tests | ✅ 140 (see the final release report) |
+| 🧪 Backend tests | ✅ 141 passed (see the final release report) |
 
 </div>
 
-📄 The [final release report](docs/FINAL_RELEASE_REPORT.md) records broader release evidence, including 141 backend tests, offline extraction evals, security and dependency scans, desktop tests, Docker checks, hosted health and readiness checks, and the recorded Calendar → Discord → WhatsApp acceptance workflow.
+📄 The [final release report](docs/FINAL_RELEASE_REPORT.md) records broader release evidence, including 141 backend tests, offline extraction evals, security and dependency scans, desktop tests, Docker checks, hosted health and readiness checks, and a recorded Calendar → Discord → WhatsApp acceptance run. Hosted revision parity remains an explicit release check.
 
 ### ▶️ Run it yourself
 

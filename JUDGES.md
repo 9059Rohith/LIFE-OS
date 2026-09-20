@@ -25,7 +25,7 @@ It is a **third option**: AI interprets → server plans → human approves → 
 |---|---|
 | **30 seconds** | Read the summary above and look at the [product poster](docs/poster/lifeos-poster.png) |
 | **3 minutes** | Open **[lifeos-live-production.up.railway.app](https://lifeos-live-production.up.railway.app)** → click **Try interactive demo** → run a consequence workflow end to end |
-| **5 minutes** | Watch the **[4:00 authenticated demo video](https://www.youtube.com/watch?v=efi747ciy18)** — narrated, subtitled, light-mode, real Calendar → Discord → WhatsApp lifecycle |
+| **5 minutes** | Watch the **[4:00 authenticated demo video](https://www.youtube.com/watch?v=efi747ciy18)** — narrated, subtitled, light-mode, authenticated provider surfaces and the consequence-workflow lifecycle; capture is read-only |
 | **10 minutes** | Read **[AI and agent boundary](README.md#-ai-and-agent-boundary)** and **[Reliability and failure handling](README.md#️-reliability-and-failure-handling)** |
 | **30 minutes** | Clone the repo, run `python -m pytest -q` (141 passing), run `npm run test:e2e` (15 passing), and explore the code |
 

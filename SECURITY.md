@@ -25,6 +25,8 @@ python scripts/scan_secrets.py
 
 before publishing changes.
 
+If a credential has ever appeared in a public commit, treat it as compromised even after deleting it from the latest tree. Rotate the credential at the provider, then remove the historical value from repository history before submission. The current release risk register records the historical credential incident and must be closed before calling the repository submission-ready.
+
 ## Boundaries
 
 LIFEOS enforces session authentication, CSRF, origin checks, approval-bound execution, provider read-back, encrypted provider tokens when configured, and a tamper-evident audit chain. It is not a penetration-tested multi-tenant SaaS and should run as a single-worker primary-owner deployment until distributed execution is implemented and verified.

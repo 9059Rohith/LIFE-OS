@@ -21,7 +21,7 @@ This report separates verified readiness from external submission caveats. It is
 - `npm --prefix frontend run build`: passed.
 - `npm --prefix desktop test`: 8 passed.
 - `npm --prefix desktop run dist:win`: rebuilt `artifacts/windows/win-unpacked/LIFEOS.exe` and `artifacts/windows/LIFEOS-Desktop-0.3.1-x64.exe`.
-- `E2E_PORT=5174 npm run test:e2e -- --project=chromium`: 7 passed, 1 skipped.
+- `E2E_PORT=5174 npm run test:e2e -- --project=chromium`: 15 passed, 1 skipped.
 - `python scripts/scan_secrets.py`: no known credential patterns found.
 - `python -m pip_audit -r docs/runtime-requirements.txt --no-deps --disable-pip`: no known vulnerabilities found.
 - `npm --prefix frontend audit --audit-level=high`: found 0 vulnerabilities.
@@ -45,7 +45,9 @@ This report separates verified readiness from external submission caveats. It is
 ## Remaining external gates
 
 - Optional: upload the demo video to a streaming host if the hackathon form rejects a GitHub-hosted video artifact.
+- Confirm that the public hosted revision matches the current GitHub commit before treating every current control as deployed.
+- Rotate any credential that appeared in repository history and purge the historical value before public submission.
 
-## Current completion estimate
+## Current release position
 
-Local implementation, GitHub publication, submission assets, public deployment and the real Calendar to Discord to WhatsApp acceptance workflow are complete. The only remaining caveat is external submission-host preference for the demo video if GitHub-hosted media is not accepted by the hackathon form.
+The local implementation, GitHub publication, submission assets, public deployment evidence, and a recorded Calendar to Discord to WhatsApp acceptance run are documented. The submission is evidence-backed, with hosted revision parity, credential-history cleanup, provider-account availability, and external video-host acceptance remaining explicit gates.

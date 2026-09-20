@@ -2,6 +2,10 @@
 
 ## High priority
 
+### Historical credential exposure
+
+A prior public commit (`972f027`) placed a credential-like value in the README URL. The current tree no longer contains it, but removing a value from the latest tree does not revoke it from Git history. Treat the value as compromised: rotate the hosted workspace credential, then purge the historical value from the public repository history before submission. Do not publish replacement credentials in README, judge guides, issues, or video descriptions.
+
 ### Hosted revision drift
 
 The public Railway service and the current GitHub source are separate release artifacts. A successful local build does not prove the hosted service is running that commit. Check `/health`, `/ready`, authenticated UI behavior, and the deployment identifier before claiming parity.
