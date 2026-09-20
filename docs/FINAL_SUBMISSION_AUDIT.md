@@ -23,7 +23,8 @@ This matrix records the current repository evidence. `COMPLETE` means implemente
 | Responsive workspace | COMPLETE | Frontend E2E mobile checks and screenshots | LOW | Retest after visual changes. |
 | Offline extraction evaluations | COMPLETE | `scripts/run_lifeos_evals.py`, `evals/extraction_cases.json` | LOW | Add planning fixtures next. |
 | CI publication | BLOCKED | GitHub OAuth token lacks `workflow` scope | MEDIUM | Re-authenticate with workflow scope before publishing Actions. |
-| Credential history cleanup | BLOCKED | Historical README commit `972f027` contained a credential-like URL value; replacement rotation was submitted but active deployment verification is pending | CRITICAL | Verify the new credential after deployment, then purge the historical value before submission. |
+| Historical credential purge | COMPLETE | Pre-scrub README commit `972f027` was removed from public `main` history; current tree scan is clean | HIGH | Keep the replacement credential out of source, issues, and demo descriptions. |
+| Hosted credential rotation | BLOCKED | Replacement value was submitted to Railway, but the active deployment still accepts the old value | CRITICAL | Restart/deploy the service, verify new login, and confirm old login fails. |
 | Hosted/source parity | PARTIAL | Hosted deployment is reachable, but the latest deployment ID must be checked against the current GitHub commit | HIGH | Deploy the current commit and rerun health, login, workflow, and provider checks. |
 | Authenticated live demo | COMPLETE | `docs/demo/lifeos-authenticated-lightmode-demo-final.mp4` | LOW | Upload to a streaming host only if required by submission rules. |
 | Poster and screenshots | COMPLETE | `docs/poster/`, `docs/screenshots/` | LOW | Refresh only after UI changes. |

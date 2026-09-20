@@ -4,7 +4,7 @@
 
 ### Historical credential exposure
 
-A prior public commit (`972f027`) placed a credential-like value in the README URL. The current tree no longer contains it, but removing a value from the latest tree does not revoke it from Git history. A replacement credential has been submitted to Railway and kept only in the ignored local `.private` directory; the active deployment still needs to restart and be tested with it. Purge the historical value from public repository history before submission. Do not publish replacement credentials in README, judge guides, issues, or video descriptions.
+A pre-scrub public commit (`972f027`) placed a credential-like value in the README URL. The public `main` history has now been rewritten and force-updated so that value is no longer reachable from the submission branch. A replacement credential has been submitted to Railway and kept only in the ignored local `.private` directory; the active deployment still needs to restart and be tested with it. Do not publish replacement credentials in README, judge guides, issues, or video descriptions.
 
 ### Hosted revision drift
 

@@ -56,6 +56,6 @@
 - [x] Authenticated live demo, narration, and subtitles
 - [x] GitHub repository
 - [ ] Published GitHub Actions workflow; blocked by OAuth scope
-- [ ] Rotate the credential exposed in historical commit `972f027`
-- [ ] Purge the historical credential value from public Git history
+- [ ] Verify the replacement credential after the hosted deployment restarts
+- [x] Purge the historical credential value from public `main` Git history
 - [ ] Deploy and verify the current GitHub commit on the hosted service
