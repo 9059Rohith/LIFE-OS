@@ -2,11 +2,13 @@
 
 This document separates verified evidence from remaining operational boundaries. It is not a claim of zero defects or universal production readiness.
 
+Post-deploy verification on 20 September 2026: checkout commit `81ec67f` was uploaded as Railway deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b`. The public `/health`, `/ready`, homepage, rotated-credential login, and authenticated `/api/session` checks returned success; the historical credential returned 401. This verifies the current service deployment and authentication boundary. It does not claim a fresh external provider mutation, which remains account- and companion-dependent.
+
 # LIFEOS release status — 18 September 2026
 
 ## Verdict
 
-LIFEOS runs locally in live mode. A separate password-protected **live Railway service** runs at `https://lifeos-live-production.up.railway.app`. It passed public login, work-record write/read-back, service restart persistence, and browser UI checks. The existing owner's Google grant was transferred through an encrypted one-use SSH import after a hosted volume backup. Gmail, Calendar, Drive, Discord and WhatsApp passed hosted live read checks while the Windows desktop app was connected. The hosted OAuth callback is now authorized, and a private Calendar create/read/delete probe passed. The repository contains evidence of a verified Calendar → Discord → WhatsApp acceptance run, plus an authenticated read-only live-site demo. The current hosted deployment and current source revision must still be checked together before claiming that every newly added control is deployed. The older `lifeos-public` service remains a protected demo. The Windows installer is an online companion, not a bundled backend release.
+LIFEOS runs locally in live mode. A separate password-protected **live Railway service** runs at `https://lifeos-live-production.up.railway.app`. It passed public login, work-record write/read-back, service restart persistence, and browser UI checks. The existing owner's Google grant was transferred through an encrypted one-use SSH import after a hosted volume backup. Gmail, Calendar, Drive, Discord and WhatsApp passed hosted live read checks while the Windows desktop app was connected. The hosted OAuth callback is now authorized, and a private Calendar create/read/delete probe passed. The repository contains evidence of a verified Calendar → Discord → WhatsApp acceptance run, plus an authenticated read-only live-site demo. The current deployment and credential rotation are verified for the release noted above. The older `lifeos-public` service remains a protected demo. The Windows installer is an online companion, not a bundled backend release.
 
 ## Current engineering verification
 

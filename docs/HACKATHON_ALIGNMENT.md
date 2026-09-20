@@ -33,7 +33,7 @@ Verified in hosted/live evidence:
 
 Remaining release limitations:
 
-- the latest hosted revision must be checked against the current source before treating the recorded Calendar to Discord to WhatsApp acceptance as a deployment guarantee,
+- the current hosted release has passed health, readiness, homepage, login and authenticated-session checks; the recorded Calendar to Discord to WhatsApp mutation acceptance remains evidence for the tested release path and should not be generalized to every provider account,
 - unsigned Windows desktop installer,
 - single-worker deployment boundary,
 - no managed external backup schedule or hosted restore drill,

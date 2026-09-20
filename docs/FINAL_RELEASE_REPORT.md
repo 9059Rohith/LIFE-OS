@@ -9,7 +9,7 @@ This report separates verified readiness from external submission caveats. It is
 - Premium reviewer documentation: architecture, AI usage, security, hackathon alignment, ScreenOps benchmark review, demo script, subtitles, screenshots and poster.
 - GitHub-published release assets, including the final demo video, screenshots and poster.
 - An authenticated 4:00 light-mode live-site demo generated from the running app with female narration and animated-fade subtitles.
-- Railway service `lifeos-live` is publicly reachable at `https://lifeos-live-production.up.railway.app`; the live acceptance run used deployment `744cc62c-c40f-47c7-b8b1-5ecb66be437d`.
+- Railway service `lifeos-live` is publicly reachable at `https://lifeos-live-production.up.railway.app`; the current checkout was uploaded as deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b` and passed post-deploy health, readiness, homepage, login, and authenticated-session checks.
 
 ## Verified locally
 
@@ -45,9 +45,8 @@ This report separates verified readiness from external submission caveats. It is
 ## Remaining external gates
 
 - Optional: upload the demo video to a streaming host if the hackathon form rejects a GitHub-hosted video artifact.
-- Confirm that the public hosted revision matches the current GitHub commit before treating every current control as deployed.
-- A replacement Railway workspace credential has been submitted without printing or committing it; verify the active deployment accepts it. The historical value was purged from the public `main` branch by the history rewrite at the current release commit.
+- GitHub Actions workflow publication remains optional and blocked by the current OAuth token's missing `workflow` scope; the verification commands remain documented for manual execution.
 
 ## Current release position
 
-The local implementation, GitHub publication, submission assets, public deployment evidence, and a recorded Calendar to Discord to WhatsApp acceptance run are documented. The submission is evidence-backed, with hosted revision parity, credential-history cleanup, provider-account availability, and external video-host acceptance remaining explicit gates.
+The local implementation, GitHub publication, submission assets, public deployment evidence, credential-history cleanup, and a recorded Calendar to Discord to WhatsApp acceptance run are documented. The current hosted release is evidence-backed and live-verified. Remaining caveats are the optional external video host, unpublished GitHub Actions workflow, the desktop dependency for WhatsApp, and the deliberately narrow single-owner deployment boundary.

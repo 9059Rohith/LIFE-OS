@@ -24,8 +24,8 @@ This matrix records the current repository evidence. `COMPLETE` means implemente
 | Offline extraction evaluations | COMPLETE | `scripts/run_lifeos_evals.py`, `evals/extraction_cases.json` | LOW | Add planning fixtures next. |
 | CI publication | BLOCKED | GitHub OAuth token lacks `workflow` scope | MEDIUM | Re-authenticate with workflow scope before publishing Actions. |
 | Historical credential purge | COMPLETE | Pre-scrub README commit `972f027` was removed from public `main` history; current tree scan is clean | HIGH | Keep the replacement credential out of source, issues, and demo descriptions. |
-| Hosted credential rotation | BLOCKED | Replacement value was submitted to Railway, but the active deployment still accepts the old value | CRITICAL | Restart/deploy the service, verify new login, and confirm old login fails. |
-| Hosted/source parity | PARTIAL | Hosted deployment is reachable, but the latest deployment ID must be checked against the current GitHub commit | HIGH | Deploy the current commit and rerun health, login, workflow, and provider checks. |
+| Hosted credential rotation | COMPLETE / LIVE-VERIFIED | Railway deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b` accepts the rotated credential; the historical credential returns 401 | MEDIUM | Keep the replacement credential out of source, issues, and demo descriptions. |
+| Hosted/source parity | COMPLETE / VERIFIED UPLOAD | Current checkout commit `81ec67f` was uploaded with `railway up`; deployment `5378760c-07f4-4d71-b337-4d5b4bfb746b` passed health, readiness, homepage, and authenticated login/session checks | MEDIUM | Recheck after future deployments; do not infer provider mutation coverage from an auth smoke test. |
 | Authenticated live demo | COMPLETE | `docs/demo/lifeos-authenticated-lightmode-demo-final.mp4` | LOW | Upload to a streaming host only if required by submission rules. |
 | Poster and screenshots | COMPLETE | `docs/poster/`, `docs/screenshots/` | LOW | Refresh only after UI changes. |
 | Documentation consistency | IMPROVED | README, release notes, scorecard and privacy boundary | MEDIUM | Run contradiction scan before submission. |
