@@ -5,7 +5,7 @@ test("deployed public demo opens without owner login and resolves the hero event
   const pageErrors: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
 
-  await page.goto("/");
+  await page.goto(process.env.E2E_BASE_PATH || "/");
   await expect(page.getByRole("button", { name: "Try interactive demo" })).toBeVisible();
   await page.getByRole("button", { name: "Try interactive demo" }).click();
   await expect(page.getByRole("button", { name: "Run hero demo" })).toBeVisible();

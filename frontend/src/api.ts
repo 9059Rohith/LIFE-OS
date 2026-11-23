@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+const apiBase = import.meta.env.BASE_URL.replace(/\/$/, "");
 let csrf = "";
 export function setCsrf(value: string) {
   csrf = value;
@@ -7,7 +9,7 @@ export async function api<T>(
   method = "GET",
   body?: unknown,
 ): Promise<T> {
-  const response = await fetch(`/api${path}`, {
+  const response = await fetch(`${apiBase}/api${path}`, {
     method,
     credentials: "same-origin",
     headers: {
@@ -31,7 +33,7 @@ export async function api<T>(
     : (response.json() as Promise<T>);
 }
 export function subscribeEvent(id: string, onNotice: () => void): () => void {
-  const source = new EventSource(`/api/events/${encodeURIComponent(id)}/stream`);
+  const source = new EventSource(`${apiBase}/api/events/${encodeURIComponent(id)}/stream`);
   source.onmessage = () => onNotice();
   return () => source.close();
 }
@@ -40,7 +42,7 @@ export async function audioRequest(
   body: FormData | { text: string },
 ): Promise<Response> {
   const form = body instanceof FormData;
-  const response = await fetch(`/api/voice/${path}`, {
+  const response = await fetch(`${apiBase}/api/voice/${path}`, {
     method: "POST",
     credentials: "same-origin",
     headers: {
