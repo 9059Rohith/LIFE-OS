@@ -1,12 +1,23 @@
 """Local DOM contract fixture. This is not a live WhatsApp account test."""
 
 from types import SimpleNamespace
+import asyncio
+import sys
 
 import pytest
 from playwright.async_api import async_playwright
 
 from lifeos.providers import ProviderError
 from lifeos.whatsapp import WhatsAppWorker
+
+
+@pytest.fixture(scope="module")
+def event_loop_policy():
+    # Playwright launches a local driver subprocess. Windows' selector loop
+    # cannot do that, even when an earlier test or library selected it.
+    if sys.platform == "win32":
+        return asyncio.WindowsProactorEventLoopPolicy()
+    return asyncio.get_event_loop_policy()
 
 
 HTML = """

@@ -1,3 +1,5 @@
+> **Deployment check — 23 November 2026:** the [live workspace](https://lifeos-live-production.up.railway.app/), [/health](https://lifeos-live-production.up.railway.app/health), and [/ready](https://lifeos-live-production.up.railway.app/ready) return HTTP 200; readiness reports a connected database. This confirms basic availability. Authenticated external-provider actions still require their credentials and, where applicable, the Windows companion.
+
 <div align="center">
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1f8f61,100:3967a5&height=220&section=header&text=LIFE-OS&fontSize=70&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=A%20consequence-aware%20operating%20system%20for%20your%20digital%20life&descAlignY=55&descSize=18" width="100%" alt="LIFE-OS banner" />
