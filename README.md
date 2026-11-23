@@ -1,4 +1,4 @@
-> **Deployment check — 23 November 2026:** the [live workspace](https://lifeos-live-production.up.railway.app/), [/health](https://lifeos-live-production.up.railway.app/health), and [/ready](https://lifeos-live-production.up.railway.app/ready) return HTTP 200; readiness reports a connected database. This confirms basic availability. Authenticated external-provider actions still require their credentials and, where applicable, the Windows companion.
+> **Deployment verified — 23 November 2026:** [Free interactive demo](https://ajeya95-lifechoice-simulator.hf.space/) · [Demo readiness](https://ajeya95-lifechoice-simulator.hf.space/ready) · [Existing live workspace](https://lifeos-live-production.up.railway.app/). The hosted demo passed the complete browser journey: enter the isolated workspace, run the hero scenario, approve the plan, execute simulated actions and see read-back verification. Real provider actions require the live workspace credentials and desktop companion. Free demo sessions can reset on a restart or idle sleep; continuous uptime is not guaranteed.
 
 <div align="center">
 
