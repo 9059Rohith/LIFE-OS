@@ -33,3 +33,7 @@ docs/demo/raw/
 docs/demo/lifeos-demo-raw.webm
 docs/demo/lifeos-demo-voiceover.wav
 docs/demo/lifeos-demo-with-voice.webm
+
+# Generated archives and media intermediates
+artifacts/
+*TEMP_MPY*
